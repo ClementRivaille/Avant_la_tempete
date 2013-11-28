@@ -1,4 +1,8 @@
-#include <pthread.h>
+#include <pthread.h>>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <assert.h>
+#include <string.h>
 
 #include "AReVi/arSystem.h"
 #include "AReVi/Lib3D/viewer3D.h"
@@ -1607,10 +1611,39 @@ else
   cout<<"Target mode"<<endl; 
   }
   
-  //création du thread de commande distante
-  pthread_t task_command;
-  
 return scd;
+}
+
+void receive(){
+	sockaddr_in si_me, si_other;
+	int s;
+	assert((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))!=-1);
+	int port=7400;
+	int broadcast=1;
+
+	setsockopt(s, SOL_SOCKET, SO_BROADCAST,	&broadcast, sizeof broadcast);
+
+	memset(&si_me, 0, sizeof(si_me));
+	si_me.sin_family = AF_INET;
+	si_me.sin_port = htons(port);
+	si_me.sin_addr.s_addr = INADDR_ANY;
+	
+	assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
+
+	char buf[10000];
+	unsigned slen=sizeof(sockaddr);
+	recvfrom(s, buf, sizeof(buf)-1, 0, (sockaddr *)&si_other, &slen);
+
+	printf("recv: %s\n", buf);
+}
+
+void *commandReceiver(void*){
+  cout<<"Thread cree"<<endl;
+	
+	receive();
+	
+	cout<<"Thread termine"<<endl;
+	return NULL;
 }
 
 int main(int argc, char** argv)
@@ -1625,6 +1658,13 @@ ArSystem::loadPlugin("MagickImageLoader");
 //ArSystem::loadPlugin("OSXImageLoader");
 //ArSystem::loadPlugin("CairoTexture");
 ArSystem::loadPlugin("XmlParser");
+
+//création du thread de commande distante
+pthread_t task_command;
+if(pthread_create(&task_command, NULL, commandReceiver, NULL)) {
+	fprintf(stderr, "Error creating command receiver thread\n");
+	return 1;
+}
 
 KinectOpenNI2::initNiTE();
 ArSystem::simulationLoop(&simulationInit);
