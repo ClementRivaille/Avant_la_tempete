@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration mode = "target" >
+  <Source port="9801" >
+    <Yaw value="0.0" />
+    <Translate x="0.3" />
+  </Source>
+  <Target ip="192.168.0.2" port="9802" port2="9803" OSC="true"/>
+  <Target ip="192.168.0.3" port="9802" port2="9803" OSC="true"/>
+</Configuration>
+
