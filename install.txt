@@ -1,0 +1,125 @@
+=>Requiring Ubuntu 12.10 x64
+
+/******************************/
+1) Installing ARevi
+/******************************/
+help : http://svn.cerv.fr/trac/AReVi/wiki/Downloads
+
+- sudo apt-get install subversion g++ scons flex bison mesa-common-dev x11proto-gl-dev libglu1-mesa-dev doxygen \
+libxslt1-dev libalut-dev libesd0-dev libimlib2-dev libmagickcore-dev libassimp-dev xfonts-100dpi xfonts-75dpi
+
+- restart the computer
+
+- svn co --no-auth-cache --username guest http://svn.cerv.fr:/svn/AReVi/trunk AReVi (password: guest)
+
+- cd AReVi
+- scons
+- sudo scons install
+
+/******************************/
+2) Installing Hlib
+/******************************/
+help : http://svn.cerv.fr/trac/hLib
+
+- svn co --no-auth-cache --username guest http://svn.cerv.fr:/svn/hLib (password: guest)
+
+- cd hLib/trunk
+- scons arevi_path=/usr/local/AReVi_dev
+- sudo scons arevi_path=/usr/local/AReVi_dev install
+
+/******************************/
+3) Libfreenect
+/******************************/
+
+- git clone https://github.com/OpenKinect/libfreenect.git
+- cd freenect
+- sudo apt-get install cmake libusb-1.0-0-dev freeglut3-dev libxi-dev libxmu-dev
+- cmake .
+- make
+- sudo make install
+
+/******************************/
+4) OpenNI
+/******************************/
+
+- download OpenNI on : http://www.openni.org/openni-sdk/ (choose the x64 version)
+- extract-it
+- cd OpenNI-Linux-x64-2.2
+- sudo ./install.sh
+
+/******************************/
+5) Nite2
+/******************************/
+
+- create an account and download Nite2 on : http://www.openni.org/files/nite/ (choose the x64 version)
+- extract-it
+- cd NiTE-Linux-x64-2.2
+- ./install.sh
+
+/******************************/
+7) OpenNI2 and freenect
+/******************************/
+
+- git clone https://github.com/piedar/OpenNI2-FreenectDriver
+- cd OpenNI2-FreenectDriver
+- ./waf configure build
+- cd build
+- cp -f libFreenectDriver.so ../../OpenNI-Linux-x64-2.2/Samples/Bin/OpenNI2/Drivers/
+- cp -f libFreenectDriver.so ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/
+
+/******************************/
+8) XWiiMote
+/******************************/
+
+- sudo apt-get install automake libudev-dev libncurses5-dev libcwiid-dev
+- git clone https://github.com/dvdhrm/xwiimote.git
+- cd xwiimote
+- ./autogen.sh
+- make
+- sudo make install
+
+/******************************/
+9) ArWiiMote
+/******************************/
+- svn co --no-auth-cache --username guest http://svn.cerv.fr:/svn/ArWiimote/trunk ArWiimote (password guest)
+- cd ArWiiMote
+- scons arevi_path=/usr/local/AReVi_dev
+- sudo scons arevi_path=/usr/local/AReVi_dev install
+
+/******************************/
+10) .bashrc
+/******************************/
+
+- Add the folowing line to the end of your file ~/.bashrc :
+echo Setting up environment for AReVi
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/AReVi/lib
+echo Setting up environment for OpenNI
+export OPENNI2_INCLUDE=TYPE_THE_PATH_TO_OPENNI/OpenNI-Linux-x64-2.2/Include
+export OPENNI2_REDIST=TYPE_THE_PATH_TO_OPENNI/OpenNI-Linux-x64-2.2/Redist
+export NITE2_INCLUDE=TYPE_THE_PATH_TO_NITE2/NiTE-Linux-x64-2.2/Include
+export NITE2_REDIST64=TYPE_THE_PATH_TO_NITE2/NiTE-Linux-x64-2.2/Redist
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENNI2_REDIST:$NITE2_REDIST64
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$OPENNI2_INCLUDE:$NITE2_INCLUDE
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$OPENNI2_INCLUDE:$NITE2_INCLUDE
+
+- relaunch the Terminal
+
+/******************************/
+10) ArPeripheral
+/******************************/
+
+- cd ArPeripheral/lib
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/libOpenNI2.so libOpenNI2.so
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/libOpenNI2.jni.so libOpenNI2.jni.so
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libFreenectDriver.so libFreenectDriver.so
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libPS1080.so libPS1080.so
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libOniFile.so libOniFile.so
+- ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libPSLink.so libPSLink.so
+- ln -s ../../NiTE-Linux-x64-2.2/Redist/libNiTE2.so libNiTE2.so
+- sudo apt-get install bluetooth libbluetooth-dev
+- scons arevi_path=/usr/local/AReVi_dev
+	* if error compiling target Tests/ArARTTrack, commment the line 278
+	* if error compiling ArKinect, comment the line 265 to 269
+- cd Applications/Tempest
+- scons arevi_path=/usr/local/AReVi_dev
+
