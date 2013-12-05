@@ -31,12 +31,15 @@ help : http://svn.cerv.fr/trac/hLib
 3) Libfreenect
 /******************************/
 
-- git clone https://github.com/OpenKinect/libfreenect.git
-- cd freenect
-- sudo apt-get install cmake libusb-1.0-0-dev freeglut3-dev libxi-dev libxmu-dev
-- cmake .
-- make
-- sudo make install
+	- git clone https://github.com/OpenKinect/libfreenect.git
+	- cd freenect
+	- sudo apt-get install cmake libusb-1.0-0-dev freeglut3-dev libxi-dev libxmu-dev
+	- cmake .
+	- make
+	- sudo make install
+
+OR (to be tested) :
+	- sudo apt-get install libfreenect-dev
 
 /******************************/
 4) OpenNI
@@ -116,7 +119,7 @@ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$OPENNI2_INCLUDE:$NITE2_INCLUDE
 - ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libOniFile.so libOniFile.so
 - ln -s ../../OpenNI-Linux-x64-2.2/Redist/OpenNI2/Drivers/libPSLink.so libPSLink.so
 - ln -s ../../NiTE-Linux-x64-2.2/Redist/libNiTE2.so libNiTE2.so
-- sudo apt-get install bluetooth libbluetooth-dev
+- sudo apt-get install bluetooth libbluetooth-dev 
 - scons arevi_path=/usr/local/AReVi_dev
 	* if error compiling target Tests/ArARTTrack, commment the line 278
 	* if error compiling ArKinect, comment the line 265 to 269
