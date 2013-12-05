@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-void receive()
+void receive(char * buf, int * nb_char)
 {
 	sockaddr_in si_me, si_other;
 	int s;
@@ -21,30 +21,27 @@ void receive()
 	
 	assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
 
-	char buf[10000];
 	unsigned slen=sizeof(sockaddr);
-	recvfrom(s, buf, sizeof(buf)-1, 0, (sockaddr *)&si_other, &slen);
+	*nb_char = recvfrom(s, buf, 12, MSG_WAITALL, (sockaddr *)&si_other, &slen);
 
 	printf("recv: %s\n", buf);
+	printf("nb_char: %d\n", *nb_char);
 }
 
-void end_buf()
+void end_buf(char * buf, int * nb_char)
 {
-	char txt [1000];
-	txt[0] = 'i';
-	txt[1] = 'n';
-	txt[2] = 't';
-	txt[3] = '\0';
-	int len = strlen(txt);
-	printf("%d\n", len);
-	char * end = txt + len+1;
-	*end = (char)9;
-	printf("%d\n", (int)*end);
-	len = strlen(txt);
-	printf("%d\n", len);
+	/*int len = strlen(buf);
+	printf("%d\n", len);*/
+	char * end = buf + *nb_char - 1;
+	unsigned char result = (unsigned char)*end;
+	unsigned int result2 = 0x00FF&result;
+	printf("%u\n", result2);
 }
 
 int main(int argc, char** argv)
-{		
-	end_buf();
+{	
+	char buf[10000];	
+	int nb_char;
+	receive(buf, &nb_char);
+	end_buf(buf, &nb_char);
 }

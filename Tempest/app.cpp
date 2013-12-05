@@ -1630,14 +1630,22 @@ void receive(){
 	
 	assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
 
-	char buf[10000];
+	char buf[12];
 	unsigned slen=sizeof(sockaddr);
-	recvfrom(s, buf, sizeof(buf)-1, 0, (sockaddr *)&si_other, &slen);
+	int nb_char = recvfrom(s, buf, sizeof(buf), MSG_WAITALL, (sockaddr *)&si_other, &slen);
 	
-	int len = strlen(buf);
-	char * value = buf + end + 1;
+	if (nb_char == 12)
+	{
+		char * end = buf + nb_char - 1;
+		unsigned char result_char = (unsigned char)*end;
+		unsigned int result_int = 0x00FF&result;
 
-	printf("recv: %d\n", (int)*value);
+		cout<<"recv: "<<result_int<<endl;
+	}
+	else
+	{
+		cout<<"ERROR IN RECEPTION"<<endl;
+	}
 }
 
 void *commandReceiver(void*){
