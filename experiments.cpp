@@ -4,8 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-
-int main(int argc, char** argv)
+void receive()
 {
 	sockaddr_in si_me, si_other;
 	int s;
@@ -27,4 +26,25 @@ int main(int argc, char** argv)
 	recvfrom(s, buf, sizeof(buf)-1, 0, (sockaddr *)&si_other, &slen);
 
 	printf("recv: %s\n", buf);
+}
+
+void end_buf()
+{
+	char txt [1000];
+	txt[0] = 'i';
+	txt[1] = 'n';
+	txt[2] = 't';
+	txt[3] = '\0';
+	int len = strlen(txt);
+	printf("%d\n", len);
+	char * end = txt + len+1;
+	*end = (char)9;
+	printf("%d\n", (int)*end);
+	len = strlen(txt);
+	printf("%d\n", len);
+}
+
+int main(int argc, char** argv)
+{		
+	end_buf();
 }

@@ -1633,8 +1633,11 @@ void receive(){
 	char buf[10000];
 	unsigned slen=sizeof(sockaddr);
 	recvfrom(s, buf, sizeof(buf)-1, 0, (sockaddr *)&si_other, &slen);
+	
+	int len = strlen(buf);
+	char * value = buf + end + 1;
 
-	printf("recv: %s\n", buf);
+	printf("recv: %d\n", (int)*value);
 }
 
 void *commandReceiver(void*){
