@@ -110,7 +110,7 @@ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$OPENNI2_INCLUDE:$NITE2_INCLUDE
 /******************************/
 10) ArPeripheral
 /******************************/
-
+- svn co --no-auth-cache --username guest http://svn.cerv.fr:/svn/ArPeripherals/trunk ArPeripherals (password guest)
 - cd ArPeripheral/lib
 - ln -s ../../OpenNI-Linux-x64-2.2/Redist/libOpenNI2.so libOpenNI2.so
 - ln -s ../../OpenNI-Linux-x64-2.2/Redist/libOpenNI2.jni.so libOpenNI2.jni.so
