@@ -21,6 +21,9 @@ using namespace std;
 #include "AReVi/Contrib/arMath.h"
 
 
+#include "AReVi/Lib3D/particleSystem.h"
+
+
 using std::cout;
 using std::endl;
 using std::cerr;
@@ -296,6 +299,11 @@ protected:
   virtual
   void
   _loadBackground();
+  
+  //initialisation de la tempete
+  virtual
+  void
+  _initTempest();
 
 protected:
   ArRef<Object3D> _obj;
@@ -309,6 +317,12 @@ protected:
 
   ArRef<Base3D> _startLocation;
   ArPtr<Renderer3D> _renderer;
+  
+  
+  //ajout d'un systeme de particules, similaire a tempest dans app.cpp
+  ArRef<ParticleSystem> _tempest;
+
+  
 };
 
 AR_CLASS_DEF(Action,ArObject)
@@ -323,6 +337,8 @@ Action::Action( ArCW & arCW)
   _fond(640*480,1000),
   _thickness(7),
   _startLocation(Base3D::NEW())
+  //ajout en rapport avec les particules
+  _tempest(ParticleSystem::NEW())
 {
 _startLocation->setPosition(1.9364, 5.73606, -0.117783);
 _startLocation->setOrientation(-0.173945,0.00944314, -0.342706);
@@ -381,7 +397,12 @@ Action::setRenderer(ArRef<Renderer3D> renderer)
 {
 _renderer = renderer;
 if (_renderer.valid())
-  { _renderer->setLocation(_startLocation); }
+  {
+	_renderer->setLocation(_startLocation);
+	
+	//initialisation du systeme de particules
+	_initTempest();
+  }
 }
 
 void
@@ -419,7 +440,7 @@ else if (v>=480)
 }
 
 bool
-Action::_action(ArRef<Activity>, double)
+Action::_action(ArRef<Activity>, double dt)
 {
 const double a_d = -0.0030711;
 const double b_d = 3.3309495;
@@ -521,6 +542,11 @@ for (int i(0);i<480;++i)
 
 if (!_points->applyChanges(true))
   { cerr<<"Invalid point set"<<endl; }
+  
+  
+//tempete  
+_tempest->update(dt);  
+  
 return true;
 }
 
@@ -616,6 +642,15 @@ if (!event.pressed)
     }
   }
 }
+
+//systeme de particules
+void _initTempest()
+{
+	_renderer->accessScene()->addParticleSystem(_tempest);
+	_tempest->setLocation(_renderer);
+}
+
+
 //----------------------------------------------------------------------------
 
 
