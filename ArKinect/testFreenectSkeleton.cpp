@@ -20,10 +20,37 @@ using namespace std;
 
 #include "AReVi/Contrib/arMath.h"
 
+//----------------------------------------------------------------------------
+// Librairies pour la pour la réception de commandes en OSC
+//----------------------------------------------------------------------------
+#include <stdio.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <assert.h>
+#include <string>
+#include <string.h>
+#include <map>
+
 
 using std::cout;
 using std::endl;
 using std::cerr;
+
+//----------------------------------------------------------------------------
+// Définition des types pour la réception de commandes en OSC
+//----------------------------------------------------------------------------
+typedef void (*OscFunction)(unsigned int);
+struct comparer
+{
+    public:
+    bool operator()(const std::string x, const std::string y)
+    {
+         return x.compare(y)<0;
+    }
+};
+typedef std::map<std::string, OscFunction, comparer> DictOscFunction;
+
 //----------------------------------------------------------------------------
 // algos pour skeletiser
 //----------------------------------------------------------------------------
@@ -289,6 +316,8 @@ public:
  */
   static ArRef<Action> getInstance();
   
+  pthread_t* getTaskCommand();
+  
   /**
  * Updates the point's thickness by OSC
  * @param direction : if 0, decreases the thickess, else increases it
@@ -322,13 +351,15 @@ protected:
 
   ArRef<Base3D> _startLocation;
   ArPtr<Renderer3D> _renderer;
+  
+  pthread_t _taskCommand;
+  
   /** Singleton instance */
   static ArRef<Action> _instance;
 };
 
 AR_CLASS_DEF(Action,ArObject)
 
-// Initiates _instance on NULL
 ArRef<Action> Action::_instance;
 
 Action::Action( ArCW & arCW)
@@ -404,7 +435,6 @@ ArRef<Action> Action::getInstance()
     {
         _instance = Action::NEW();
     }
-    
     return _instance;
 }
 
@@ -665,8 +695,79 @@ void Action::updateThickness(unsigned int direction)
   }
   this->_points->setThickness(_thickness);
 }
+
+pthread_t* Action::getTaskCommand()
+{
+	return &_taskCommand;
+}
 //----------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------
+// Fonctions de réception de commandes en OSC
+//----------------------------------------------------------------------------
+
+void receive(char * buf, int * nb_char)
+{
+    sockaddr_in si_me, si_other;
+    int s;
+    assert((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))!=-1);
+    int port=7400;
+    int broadcast=1;
+
+    setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
+
+    memset(&si_me, 0, sizeof(si_me));
+    si_me.sin_family = AF_INET;
+    si_me.sin_port = htons(port);
+    si_me.sin_addr.s_addr = INADDR_ANY;
+    
+    assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
+
+    unsigned slen=sizeof(sockaddr);
+    *nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
+
+    printf("recv: %s\n", buf);
+    printf("nb_char: %d\n", *nb_char);
+}
+
+void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
+{
+    printf("Receive string : %s\n", buf);
+    std::string functionName(buf);
+   	char * end = buf + *nb_char - 1;
+	unsigned char result = (unsigned char)*end;
+	unsigned int result2 = 0x00FF&result;
+	printf("Receive parameter : %u\n", result2);
+	
+	OscFunction ptrF;
+    ptrF = (*dict)[functionName];
+    ptrF(result2);
+}
+
+void updateThickness(unsigned int a)
+{
+	ArRef<Action> action = Action::getInstance();
+	action->updateThickness(a);
+}
+
+void *commandReceiver(void*)
+{	
+	char buf[1000];    
+    int nb_char;
+    DictOscFunction dictOscFunctions;
+    
+    dictOscFunctions.insert(std::pair<std::string,OscFunction>("Particule",updateThickness));
+	
+	cout<<"Thread cree"<<endl;
+	
+	receive(buf, &nb_char);
+	read_buf(buf, &nb_char, &dictOscFunctions);
+	
+	cout<<"Thread termine"<<endl;
+	return NULL;
+}
+
+//----------------------------------------------------------------------------
 
 ArRef<Scheduler>
 simulationInit(void)
@@ -691,6 +792,12 @@ action->setRenderer(v);
 v->addKeyboardCB(action, &Action::keyboardCB);
 //v->setStereoMode(Renderer3D::STEREO_SPLIT);
 v->setDecoration(false);
+
+//création du thread de réception de commandes OSC
+if(pthread_create(action->getTaskCommand(), NULL, commandReceiver, NULL)) {
+	fprintf(stderr, "Error creating command receiver thread\n");
+}
+
 return(sched);
 }
 
@@ -706,6 +813,5 @@ ArSystem::loadPlugin("MagickImageLoader");
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 
-ArRef<Action> action = Action::getInstance();
 return(0);
 }
