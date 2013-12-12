@@ -287,7 +287,7 @@ public:
  *  Retrieves the singleton instance of Action. If the singleton doesn't exists, creates it.
  * @return ArRef on Action singleton instance
  */
-  static virtual ArRef<Action> getInstance();
+  static ArRef<Action> getInstance();
   
   /**
  * Updates the point's thickness by OSC
@@ -327,6 +327,9 @@ protected:
 };
 
 AR_CLASS_DEF(Action,ArObject)
+
+// Initiates _instance on NULL
+ArRef<Action> Action::_instance;
 
 Action::Action( ArCW & arCW)
   : ArObject(arCW),
@@ -397,12 +400,12 @@ Action::~Action()
  */
 ArRef<Action> Action::getInstance()
 {
-    if (NULL == this->_instance)
+    if (_instance.null())
     {
-        this->_instance = Action::NEW();
+        _instance = Action::NEW();
     }
     
-    return this->_instance;
+    return _instance;
 }
 
 void
@@ -706,5 +709,3 @@ ArSystem::simulationLoop(&simulationInit);
 ArRef<Action> action = Action::getInstance();
 return(0);
 }
-
-
