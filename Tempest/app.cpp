@@ -1630,9 +1630,9 @@ void receive(){
 	
 	assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
 
-	char buf[12];
+	char buf[10000];
 	unsigned slen=sizeof(sockaddr);
-	int nb_char = recvfrom(s, buf, sizeof(buf), MSG_WAITALL, (sockaddr *)&si_other, &slen);
+	int nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
 	
 	if (nb_char == 12)
 	{

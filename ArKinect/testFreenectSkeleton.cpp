@@ -274,7 +274,6 @@ class Action : public ArObject
 {
 public:
   AR_CLASS(Action)
-  AR_CONSTRUCTOR(Action)
 
   virtual
   void
@@ -283,8 +282,22 @@ public:
   virtual
   void
   setRenderer(ArRef<Renderer3D> renderer);
+  
+  /**
+ *  Retrieves the singleton instance of Action. If the singleton doesn't exists, creates it.
+ * @return ArRef on Action singleton instance
+ */
+  static virtual ArRef<Action> getInstance();
+  
+  /**
+ * Updates the point's thickness by OSC
+ * @param direction : if 0, decreases the thickess, else increases it
+ */
+  virtual void updateThickness(unsigned int direction);
 
 protected:
+  AR_CONSTRUCTOR(Action)
+  
   virtual
   void
   _computeColorCoordinatesForPoint(const Vector3d & point3D, int & u, int & v);
@@ -309,6 +322,8 @@ protected:
 
   ArRef<Base3D> _startLocation;
   ArPtr<Renderer3D> _renderer;
+  /** Singleton instance */
+  static ArRef<Action> _instance;
 };
 
 AR_CLASS_DEF(Action,ArObject)
@@ -374,6 +389,20 @@ _loadBackground();
 
 Action::~Action()
 {
+}
+
+/**
+ *  Retrieves the singleton instance of Action. If the singleton doesn't exists, creates it.
+ * @return ArRef on Action singleton instance
+ */
+ArRef<Action> Action::getInstance()
+{
+    if (NULL == this->_instance)
+    {
+        this->_instance = Action::NEW();
+    }
+    
+    return this->_instance;
 }
 
 void
@@ -616,6 +645,23 @@ if (!event.pressed)
     }
   }
 }
+
+/**
+ * Updates the point's thickness by OSC
+ * @param direction : if 0, decreases the thickess, else increases it
+ */
+void Action::updateThickness(unsigned int direction)
+{
+  if (direction > 0)
+  {
+    this->_thickness +=1;
+  }
+  else
+  {
+    this->_thickness = std::max(1,_thickness-1);
+  }
+  this->_points->setThickness(_thickness);
+}
 //----------------------------------------------------------------------------
 
 
@@ -637,7 +683,7 @@ v->setMapped(true);
 v->translate(-5.0,0.0,0.0);
 v->setBackgroundColor(0.0,0.0,0.0);
 
-ArRef<Action> action = Action::NEW();
+ArRef<Action> action = Action::getInstance();
 action->setRenderer(v);
 v->addKeyboardCB(action, &Action::keyboardCB);
 //v->setStereoMode(Renderer3D::STEREO_SPLIT);
@@ -656,6 +702,8 @@ ArSystem::loadPlugin("MagickImageLoader");
 
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
+
+ArRef<Action> action = Action::getInstance();
 return(0);
 }
 
