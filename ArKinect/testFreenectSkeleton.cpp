@@ -322,7 +322,7 @@ public:
  * Updates the point's thickness by OSC
  * @param direction : if 0, decreases the thickess, else increases it
  */
-  virtual void updateThickness(unsigned int direction);
+  virtual void updateThickness(bool direction);
 
 protected:
   AR_CONSTRUCTOR(Action)
@@ -683,16 +683,12 @@ if (!event.pressed)
  * Updates the point's thickness by OSC
  * @param direction : if 0, decreases the thickess, else increases it
  */
-void Action::updateThickness(unsigned int direction)
+void Action::updateThickness(bool direction)
 {
-  if (direction > 0)
-  {
+  if (direction)
     this->_thickness +=1;
-  }
   else
-  {
     this->_thickness = std::max(1,_thickness-1);
-  }
   this->_points->setThickness(_thickness);
 }
 
@@ -739,15 +735,18 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 	unsigned int result2 = 0x00FF&result;
 	printf("Receive parameter : %u\n", result2);
 	
-	OscFunction ptrF;
-    ptrF = (*dict)[functionName];
-    ptrF(result2);
+    //OscFunction ptrF;
+	DictOscFunction::const_iterator ptrF;
+    //ptrF = (*dict)[functionName];
+    ptrF = (*dict).find(functionName);
+    if (ptrF != (*dict).end()
+        (*ptrF)(result2);
 }
 
 void updateThickness(unsigned int a)
 {
 	ArRef<Action> action = Action::getInstance();
-	action->updateThickness(a);
+	action->updateThickness((a > 0));
 }
 
 void *commandReceiver(void*)
@@ -756,7 +755,7 @@ void *commandReceiver(void*)
     int nb_char;
     DictOscFunction dictOscFunctions;
     
-    dictOscFunctions.insert(std::pair<std::string,OscFunction>("Particule",updateThickness));
+    dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
 	
 	cout<<"Thread cree"<<endl;
 	
