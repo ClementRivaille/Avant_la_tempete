@@ -739,7 +739,7 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 	DictOscFunction::const_iterator ptrF;
     //ptrF = (*dict)[functionName];
     ptrF = (*dict).find(functionName);
-    if (ptrF != (*dict).end()
+    if (ptrF != (*dict).end())
         (*ptrF)(result2);
 }
 
@@ -755,7 +755,7 @@ void *commandReceiver(void*)
     int nb_char;
     DictOscFunction dictOscFunctions;
     
-    dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
+    dictOscFunctions.insert(std::pair<std::string,OscFunction>("th_ickness",updateThickness));
 	
 	cout<<"Thread cree"<<endl;
 	
