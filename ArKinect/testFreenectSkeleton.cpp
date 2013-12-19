@@ -545,7 +545,11 @@ if (!_points->applyChanges(true))
   { cerr<<"Invalid point set"<<endl; }
   
   
-//tempete  
+//tempete 
+//directions aleatoires
+const double angle = M_PI/4;
+_tempest->pitch(_ArSystem::realRand()*angle);
+_tempest->yaw(ArSystem::realRand()*angle);
 _tempest->update(dt);  
   
 return true;
