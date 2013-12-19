@@ -320,7 +320,8 @@ public:
   void setIdCommandSocket(int idSocket);  
   int getIdCommandSocket();
   
-  pthread_t* getTaskCommand();
+  void setTaskCommand(pthread_t);
+  pthread_t getTaskCommand();
   
   /**
  * Updates the point's thickness by OSC
@@ -707,9 +708,14 @@ int Action::getIdCommandSocket()
 	return _idCommandSocket;
 }
 
-pthread_t* Action::getTaskCommand()
+void Action::setTaskCommand(pthread_t thr)
 {
-	return &_taskCommand;
+	_taskCommand = thr;
+}
+
+pthread_t Action::getTaskCommand()
+{
+	return _taskCommand;
 }
 //----------------------------------------------------------------------------
 
@@ -748,7 +754,8 @@ void receive(int s, char * buf, int * nb_char)
     sockaddr_in si_other;
     
     unsigned slen=sizeof(sockaddr);
-    *nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
+    //*nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
+    *nb_char = recvfrom(s, buf, 1000, 0, (sockaddr *)&si_other, &slen);
 
     printf("recv: %s\n", buf);
     printf("nb_char: %d\n", *nb_char);
@@ -790,10 +797,12 @@ void *commandReceiver(void*)
 	
 	cout<<"Thread cree"<<endl;
 
-	while(nbFois < 20)
+	while(nbFois < 20 && action->getIdCommandSocket() != -1)
 	{
+		cout<<"Socket="<<idSocket<<endl;
 		receive(idSocket, buf, &nb_char);
-		read_buf(buf, &nb_char, &dictOscFunctions);
+		if(nb_char > 0)
+			read_buf(buf, &nb_char, &dictOscFunctions);
 		nbFois++;
 	}
 	
@@ -832,10 +841,13 @@ action->setIdCommandSocket(init_socket(7400));
 
 if(action->getIdCommandSocket() != -1)
 {
+	pthread_t thr;
 	//création du thread de réception de commandes OSC
-	if(pthread_create(action->getTaskCommand(), NULL, commandReceiver, NULL)) {
+	if(pthread_create(&thr, NULL, commandReceiver, NULL)) {
 		fprintf(stderr, "Error creating command receiver thread\n");
 	}
+	action->setTaskCommand(thr);
+	cout<<"Socket="<<action->getIdCommandSocket()<<endl;
 }
 else
 	fprintf(stderr, "Error creating command receiver socket\n");
@@ -855,13 +867,15 @@ ArSystem::loadPlugin("MagickImageLoader");
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 
-cout<<"Close socket"<<endl;
 //quit the application -> close the socket and wait the end of the command receiver thread
 ArRef<Action> action = Action::getInstance();
 int idSocket = action->getIdCommandSocket();
 if(idSocket != -1)
 {
-	close(idSocket);
+	cout<<"Socket="<<idSocket<<endl;
+	cout<<"Close socket "<<close(idSocket)<<endl;
+	action->setIdCommandSocket(-1);
+	pthread_join(action->getTaskCommand(), NULL);
 }
 
 return(0);

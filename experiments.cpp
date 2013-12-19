@@ -1,4 +1,4 @@
-# include <stdio.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -6,6 +6,7 @@
 #include <string>
 #include <string.h>
 #include <map>
+#include <pthread.h>
 
 typedef void (*OscFunction)(unsigned int);
 
@@ -69,31 +70,45 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 	unsigned int result2 = 0x00FF&result;
 	printf("Receive parameter : %u\n", result2);
 	
-	//OscFunction ptrF;
 	DictOscFunction::const_iterator ptrF;
-    //ptrF = (*dict)[functionName];
     ptrF = (*dict).find(functionName);
     if (ptrF != (*dict).end())
         (*ptrF->second)(result2);
 }
 
-int main(int argc, char** argv)
-{   
-    char buf[10000];    
+
+void *commandReceiver(void* arg)
+{
+	int * port = (int *) arg;
+	int i;
+	char buf[10000];
     int nb_char;
-    int port=7400;
     DictOscFunction dictOscFunctions;
     
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("Particule",f1));
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("Point",f2));
     
+	for (int i = 0 ; i < 10 ; i++)
+    {
+        receive(*port, buf, &nb_char);
+        if(nb_char > 0)
+			read_buf(buf, &nb_char, &dictOscFunctions);
+    }
+    return NULL;
+}
+
+int main(int argc, char** argv)
+{   
+    int port=7400;    
+    pthread_t mythread;
+    
     int s = init_socket(port);
     
-    for (int i = 0 ; i < 10 ; i++)
-    {
-        receive(s, buf, &nb_char);
-        read_buf(buf, &nb_char, &dictOscFunctions);
-    }
+    if(pthread_create(&mythread, NULL, commandReceiver,  (void*)&s)) {
+		fprintf(stderr, "Error creating command receiver thread\n");
+	}
     
+    printf("Close socket\n");
     close(s);
+    pthread_join(mythread, NULL);
 }
