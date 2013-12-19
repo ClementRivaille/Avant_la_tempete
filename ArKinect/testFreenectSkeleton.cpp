@@ -703,22 +703,29 @@ pthread_t* Action::getTaskCommand()
 // Fonctions de réception de commandes en OSC
 //----------------------------------------------------------------------------
 
+/**
+ * Initialisation of the command receiver socket
+ * @param port : port of the socket
+ * @return file descriptor of the socket or -1 in case of error
+ */
 int init_socket(int port)
 {
     sockaddr_in si_me;
     int s;
-    assert((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))!=-1);
     int broadcast=1;
-
-    setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
-
-    memset(&si_me, 0, sizeof(si_me));
-    si_me.sin_family = AF_INET;
-    si_me.sin_port = htons(port);
-    si_me.sin_addr.s_addr = INADDR_ANY;
     
-    assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
+    if((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) !=-1)
+    {		
+		setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
 
+		memset(&si_me, 0, sizeof(si_me));
+		si_me.sin_family = AF_INET;
+		si_me.sin_port = htons(port);
+		si_me.sin_addr.s_addr = INADDR_ANY;
+		
+		if(bind(s, (sockaddr *)&si_me, sizeof(sockaddr)) == -1)
+			return -1;
+	}
     return s;
 }
 
@@ -770,14 +777,19 @@ void *commandReceiver(void*)
 	
 	int sock = init_socket(7400);
 	
-	while(nbFois < 20)
+	if(sock != -1)
 	{
-		receive(sock, buf, &nb_char);
-		read_buf(buf, &nb_char, &dictOscFunctions);
-		nbFois++;
+		while(nbFois < 20)
+		{
+			receive(sock, buf, &nb_char);
+			read_buf(buf, &nb_char, &dictOscFunctions);
+			nbFois++;
+		}
+		
+		close(sock);
 	}
-	
-	close(sock);
+	else
+		fprintf(stderr, "Error creating command receiver socket\n");
 	
 	cout<<"Thread termine"<<endl;
 	return NULL;
