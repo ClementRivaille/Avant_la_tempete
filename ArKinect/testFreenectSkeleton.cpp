@@ -9,6 +9,7 @@ using namespace std;
 #include "AReVi/Lib3D/object3D.h"
 #include "AReVi/Lib3D/transform3D.h"
 #include "AReVi/Lib3D/base3D.h"
+#include "AReVi/Lib3D/scene3D.h"
 
 #include "AReVi/Shapes/shape3D.h"
 #include "AReVi/Shapes/pointSet3D.h"
