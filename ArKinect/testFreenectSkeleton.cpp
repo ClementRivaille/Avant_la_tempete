@@ -648,7 +648,8 @@ if (!event.pressed)
 void Action::_initTempest()
 {
 	_renderer->accessScene()->addParticleSystem(_tempest);
-	_tempest->setLocation(_renderer);
+	_tempest->setLocation(_startLocation);
+	_tempest->setGravity(0.0,0.0,0.0);
 }
 
 
