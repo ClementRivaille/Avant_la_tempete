@@ -336,7 +336,7 @@ Action::Action( ArCW & arCW)
   _lastFrame(640*480,1000),
   _fond(640*480,1000),
   _thickness(7),
-  _startLocation(Base3D::NEW())
+  _startLocation(Base3D::NEW()),
   //ajout en rapport avec les particules
   _tempest(ParticleSystem::NEW())
 {
@@ -644,7 +644,7 @@ if (!event.pressed)
 }
 
 //systeme de particules
-void _initTempest()
+void Action::_initTempest()
 {
 	_renderer->accessScene()->addParticleSystem(_tempest);
 	_tempest->setLocation(_renderer);
@@ -693,5 +693,3 @@ Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 return(0);
 }
-
-
