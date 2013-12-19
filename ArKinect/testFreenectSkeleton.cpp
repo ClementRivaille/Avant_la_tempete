@@ -26,6 +26,7 @@ using namespace std;
 #include <stdio.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netdb.h>
 #include <assert.h>
 #include <string>
@@ -702,12 +703,11 @@ pthread_t* Action::getTaskCommand()
 // Fonctions de réception de commandes en OSC
 //----------------------------------------------------------------------------
 
-void receive(char * buf, int * nb_char)
+int init_socket(int port)
 {
-    sockaddr_in si_me, si_other;
+    sockaddr_in si_me;
     int s;
     assert((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))!=-1);
-    int port=7400;
     int broadcast=1;
 
     setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
@@ -719,6 +719,13 @@ void receive(char * buf, int * nb_char)
     
     assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
 
+    return s;
+}
+
+void receive(int s, char * buf, int * nb_char)
+{
+    sockaddr_in si_other;
+    
     unsigned slen=sizeof(sockaddr);
     *nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
 
@@ -761,12 +768,16 @@ void *commandReceiver(void*)
 	
 	cout<<"Thread cree"<<endl;
 	
+	int sock = init_socket(7400);
+	
 	while(nbFois < 20)
 	{
-		receive(buf, &nb_char);
+		receive(sock, buf, &nb_char);
 		read_buf(buf, &nb_char, &dictOscFunctions);
 		nbFois++;
 	}
+	
+	close(sock);
 	
 	cout<<"Thread termine"<<endl;
 	return NULL;
