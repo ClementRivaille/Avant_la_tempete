@@ -740,7 +740,7 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
     //ptrF = (*dict)[functionName];
     ptrF = (*dict).find(functionName);
     if (ptrF != (*dict).end())
-        (*ptrF)(result2);
+        (*ptrF->second)(result2);
 }
 
 void updateThickness(unsigned int a)
@@ -752,15 +752,21 @@ void updateThickness(unsigned int a)
 void *commandReceiver(void*)
 {	
 	char buf[1000];    
-    int nb_char;
+    int nb_char, nbFois;
     DictOscFunction dictOscFunctions;
     
-    dictOscFunctions.insert(std::pair<std::string,OscFunction>("th_ickness",updateThickness));
+    dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
+	
+	nbFois = 0;
 	
 	cout<<"Thread cree"<<endl;
 	
-	receive(buf, &nb_char);
-	read_buf(buf, &nb_char, &dictOscFunctions);
+	while(nbFois < 20)
+	{
+		receive(buf, &nb_char);
+		read_buf(buf, &nb_char, &dictOscFunctions);
+		nbFois++;
+	}
 	
 	cout<<"Thread termine"<<endl;
 	return NULL;
