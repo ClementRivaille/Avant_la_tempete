@@ -649,7 +649,11 @@ void Action::_initTempest()
 {
 	_renderer->accessScene()->addParticleSystem(_tempest);
 	_tempest->setLocation(_startLocation);
+	_tempest->setParticleRate(400.0);
 	_tempest->setGravity(0.0,0.0,0.0);
+	_tempest->setEmissionSpeed(40.0);
+	_tempest->setEmissionSpeedDispersion(0.5);
+	_tempest->setInitialAngleDispersion(0.1);
 }
 
 
