@@ -548,7 +548,7 @@ if (!_points->applyChanges(true))
 //tempete 
 //directions aleatoires
 const double angle = M_PI/4;
-_tempest->pitch(_ArSystem::realRand()*angle);
+_tempest->pitch(ArSystem::realRand()*angle);
 _tempest->yaw(ArSystem::realRand()*angle);
 _tempest->update(dt);  
   
