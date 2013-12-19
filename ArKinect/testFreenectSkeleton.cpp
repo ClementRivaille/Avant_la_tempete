@@ -317,6 +317,9 @@ public:
  */
   static ArRef<Action> getInstance();
   
+  void setIdCommandSocket(int idSocket);  
+  int getIdCommandSocket();
+  
   pthread_t* getTaskCommand();
   
   /**
@@ -354,6 +357,7 @@ protected:
   ArPtr<Renderer3D> _renderer;
   
   pthread_t _taskCommand;
+  int _idCommandSocket;
   
   /** Singleton instance */
   static ArRef<Action> _instance;
@@ -693,6 +697,16 @@ void Action::updateThickness(bool direction)
   this->_points->setThickness(_thickness);
 }
 
+void Action::setIdCommandSocket(int idSocket)
+{
+	_idCommandSocket = idSocket;
+}
+
+int Action::getIdCommandSocket()
+{
+	return _idCommandSocket;
+}
+
 pthread_t* Action::getTaskCommand()
 {
 	return &_taskCommand;
@@ -749,9 +763,7 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 	unsigned int result2 = 0x00FF&result;
 	printf("Receive parameter : %u\n", result2);
 	
-    //OscFunction ptrF;
-	DictOscFunction::const_iterator ptrF;
-    //ptrF = (*dict)[functionName];
+    DictOscFunction::const_iterator ptrF;
     ptrF = (*dict).find(functionName);
     if (ptrF != (*dict).end())
         (*ptrF->second)(result2);
@@ -766,30 +778,24 @@ void updateThickness(unsigned int a)
 void *commandReceiver(void*)
 {	
 	char buf[1000];    
-    int nb_char, nbFois;
+    int nb_char, nbFois, idSocket;
     DictOscFunction dictOscFunctions;
     
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
+    
+    ArRef<Action> action = Action::getInstance();
+    idSocket = action->getIdCommandSocket();
 	
 	nbFois = 0;
 	
 	cout<<"Thread cree"<<endl;
-	
-	int sock = init_socket(7400);
-	
-	if(sock != -1)
+
+	while(nbFois < 20)
 	{
-		while(nbFois < 20)
-		{
-			receive(sock, buf, &nb_char);
-			read_buf(buf, &nb_char, &dictOscFunctions);
-			nbFois++;
-		}
-		
-		close(sock);
+		receive(idSocket, buf, &nb_char);
+		read_buf(buf, &nb_char, &dictOscFunctions);
+		nbFois++;
 	}
-	else
-		fprintf(stderr, "Error creating command receiver socket\n");
 	
 	cout<<"Thread termine"<<endl;
 	return NULL;
@@ -821,10 +827,18 @@ v->addKeyboardCB(action, &Action::keyboardCB);
 //v->setStereoMode(Renderer3D::STEREO_SPLIT);
 v->setDecoration(false);
 
-//création du thread de réception de commandes OSC
-if(pthread_create(action->getTaskCommand(), NULL, commandReceiver, NULL)) {
-	fprintf(stderr, "Error creating command receiver thread\n");
+//creation de la socket de command receiver
+action->setIdCommandSocket(init_socket(7400));
+
+if(action->getIdCommandSocket() != -1)
+{
+	//création du thread de réception de commandes OSC
+	if(pthread_create(action->getTaskCommand(), NULL, commandReceiver, NULL)) {
+		fprintf(stderr, "Error creating command receiver thread\n");
+	}
 }
+else
+	fprintf(stderr, "Error creating command receiver socket\n");
 
 return(sched);
 }
@@ -840,6 +854,15 @@ ArSystem::loadPlugin("MagickImageLoader");
 
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
+
+cout<<"Close socket"<<endl;
+//quit the application -> close the socket and wait the end of the command receiver thread
+ArRef<Action> action = Action::getInstance();
+int idSocket = action->getIdCommandSocket();
+if(idSocket != -1)
+{
+	close(idSocket);
+}
 
 return(0);
 }
