@@ -16,7 +16,7 @@ if __name__ == "__main__":
       help="The ip of the OSC server")
   parser.add_argument("--port", type=int, default=8000,
       help="The port the OSC server is listening on")
-  parser.add_argument("--msg", type=int, default="",
+  parser.add_argument("--msg", type=str, default="",
       help="The message to send (ie the function to be called)")
   parser.add_argument("--value", type=int, default=0,
       help="The value that will be given to the function")

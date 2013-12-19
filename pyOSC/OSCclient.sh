@@ -1,1 +1,1 @@
-python3 clientOSC.py --ip 148.60.80.104 --port 7400
+python3 clientOSC.py --ip 127.0.0.1 --port 7400 --msg "thickness" --value 1
