@@ -1,5 +1,6 @@
 # include <stdio.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netdb.h>
 #include <assert.h>
 #include <string>
@@ -29,12 +30,11 @@ void f2(unsigned int b)
 	printf("F2, b = %d\n", b);
 }
 
-void receive(char * buf, int * nb_char)
+int init_socket(int port)
 {
-    sockaddr_in si_me, si_other;
+    sockaddr_in si_me;
     int s;
     assert((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))!=-1);
-    int port=7400;
     int broadcast=1;
 
     setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
@@ -46,6 +46,13 @@ void receive(char * buf, int * nb_char)
     
     assert(bind(s, (sockaddr *)&si_me, sizeof(sockaddr))!=-1);
 
+    return s;
+}
+
+void receive(int s, char * buf, int * nb_char)
+{
+    sockaddr_in si_other;
+    
     unsigned slen=sizeof(sockaddr);
     *nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
 
@@ -62,20 +69,31 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 	unsigned int result2 = 0x00FF&result;
 	printf("Receive parameter : %u\n", result2);
 	
-	OscFunction ptrF;
-    ptrF = (*dict)[functionName];
-    ptrF(result2);
+	//OscFunction ptrF;
+	DictOscFunction::const_iterator ptrF;
+    //ptrF = (*dict)[functionName];
+    ptrF = (*dict).find(functionName);
+    if (ptrF != (*dict).end())
+        (*ptrF->second)(result2);
 }
 
 int main(int argc, char** argv)
 {   
     char buf[10000];    
-    int nb_char;    
+    int nb_char;
+    int port=7400;
     DictOscFunction dictOscFunctions;
     
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("Particule",f1));
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("Point",f2));
     
-    receive(buf, &nb_char);
-    read_buf(buf, &nb_char, &dictOscFunctions);
+    int s = init_socket(port);
+    
+    for (int i = 0 ; i < 10 ; i++)
+    {
+        receive(s, buf, &nb_char);
+        read_buf(buf, &nb_char, &dictOscFunctions);
+    }
+    
+    close(s);
 }
