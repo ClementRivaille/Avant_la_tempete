@@ -41,7 +41,15 @@ using std::cerr;
 //----------------------------------------------------------------------------
 // Définition des types pour la réception de commandes en OSC
 //----------------------------------------------------------------------------
+
+/**
+ * Functions called by a OSC message. Takes one integer as parameter.
+ */
 typedef void (*OscFunction)(unsigned int);
+
+/**
+ * Operator used to compare two functions' name
+ */
 struct comparer
 {
     public:
@@ -50,6 +58,10 @@ struct comparer
          return x.compare(y)<0;
     }
 };
+
+/**
+ * Dictionary linking names to OscFunctions
+ */
 typedef std::map<std::string, OscFunction, comparer> DictOscFunction;
 
 //----------------------------------------------------------------------------
@@ -317,9 +329,15 @@ public:
  */
   static ArRef<Action> getInstance();
   
+  /**
+   * Setter and getter of the id of the socket that receives command
+   */
   void setIdCommandSocket(int idSocket);  
   int getIdCommandSocket();
   
+  /**
+   * Setter and getter of the p_thread in charge of the messages' reception
+   */
   void setTaskCommand(pthread_t);
   pthread_t getTaskCommand();
   
@@ -357,7 +375,9 @@ protected:
   ArRef<Base3D> _startLocation;
   ArPtr<Renderer3D> _renderer;
   
+  /** P_thread in charge of the reception of commands */
   pthread_t _taskCommand;
+  /** Socket receiving messages */
   int _idCommandSocket;
   
   /** Singleton instance */
@@ -366,6 +386,7 @@ protected:
 
 AR_CLASS_DEF(Action,ArObject)
 
+// The instance has to be declared separately to properly work
 ArRef<Action> Action::_instance;
 
 Action::Action( ArCW & arCW)
@@ -687,7 +708,7 @@ if (!event.pressed)
 
 /**
  * Updates the point's thickness by OSC
- * @param direction : if 0, decreases the thickess, else increases it
+ * @param direction : if false, decreases the thickess, else increases it
  */
 void Action::updateThickness(bool direction)
 {
@@ -749,57 +770,94 @@ int init_socket(int port)
     return s;
 }
 
+/**
+ * Receive a message from the socket. The message is an OSC request.
+ * @param s : socket that receives the message
+ * @param buf : buffer in which the message is stored
+ * @param nb_char : size of the received message
+ */
 void receive(int s, char * buf, int * nb_char)
 {
+    // Message's sender
     sockaddr_in si_other;
     
+    // Reception
     unsigned slen=sizeof(sockaddr);
     *nb_char = recvfrom(s, buf, 1000, 0, (sockaddr *)&si_other, &slen);
 
+    // We print the received message and its size
     printf("recv: %s\n", buf);
     printf("nb_char: %d\n", *nb_char);
 }
 
+/**
+ * Read and executes a message received. Messages are composed of the name of a function, and a value.
+ * @param buf : message
+ * @param nb_char : size of the message
+ * @param dict : dictionnary linking names of functions to functions
+ */
 void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 {
     printf("Receive string : %s\n", buf);
+    // Acquiring the function's name
     std::string functionName(buf);
+    // The value is at the end of the OSC message
    	char * end = buf + *nb_char - 1;
+    // Getting the value, and converting it to an integer
 	unsigned char result = (unsigned char)*end;
 	unsigned int result2 = 0x00FF&result;
 	printf("Receive parameter : %u\n", result2);
 	
+    // We check if the dictionary contains the function
     DictOscFunction::const_iterator ptrF;
     ptrF = (*dict).find(functionName);
     if (ptrF != (*dict).end())
+        // If so, we call the function with the given value as parameter
         (*ptrF->second)(result2);
 }
 
+/**
+ * Call the function Action::updateThickness that increase or reduce the pixels' size.
+ * @param a : if > 0, the size is increased, else it's reduced
+ */
 void updateThickness(unsigned int a)
 {
 	ArRef<Action> action = Action::getInstance();
 	action->updateThickness((a > 0));
 }
 
+/**
+ * Reception of commands from other devices with OSC requests.
+ * Receives OSC messages, then calls the associated function with the received value.
+ */
 void *commandReceiver(void*)
 {	
+    // Messages' buffer
 	char buf[1000];    
+    // Size of messages and socket's id
     int nb_char, idSocket;
+    // Dictionary of functions
     DictOscFunction dictOscFunctions;
     
+    // We allows the thread to be stopped at the end of application
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     
+    // Linking functions to their names in the dictionnary
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
     
+    // Getting the socket's id from the instance of action
     ArRef<Action> action = Action::getInstance();
     idSocket = action->getIdCommandSocket();
 	
 	cout<<"Communication lancée"<<endl;
 
+    // Starting the reception
 	while(1)
 	{
+        // Receiving the message
 		receive(idSocket, buf, &nb_char);
+        // If not empty, reading and executing it
 		if(nb_char > 0)
 			read_buf(buf, &nb_char, &dictOscFunctions);
 	}
@@ -863,7 +921,7 @@ ArSystem::loadPlugin("MagickImageLoader");
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 
-//quit the application -> close the socket and wait the end of the command receiver thread
+//quits the application -> closes the socket and cancels the command receiver thread
 ArRef<Action> action = Action::getInstance();
 int idSocket = action->getIdCommandSocket();
 if(idSocket != -1)
