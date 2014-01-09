@@ -656,6 +656,8 @@ void Action::_initTempest()
 	_renderer->accessScene()->addParticleSystem(_tempest);
 	_tempest->setLocation(_startLocation);
 	
+	_temepst->translate(-5.0,0.0,0.0);
+	
 	_tempest->setSection(25.0,25.0,0.0,0.0,true);
 	
 	_tempest->setParticleRate(400.0);
