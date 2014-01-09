@@ -754,7 +754,6 @@ void receive(int s, char * buf, int * nb_char)
     sockaddr_in si_other;
     
     unsigned slen=sizeof(sockaddr);
-    //*nb_char = recvfrom(s, buf, 1000, MSG_WAITALL, (sockaddr *)&si_other, &slen);
     *nb_char = recvfrom(s, buf, 1000, 0, (sockaddr *)&si_other, &slen);
 
     printf("recv: %s\n", buf);
@@ -785,28 +784,26 @@ void updateThickness(unsigned int a)
 void *commandReceiver(void*)
 {	
 	char buf[1000];    
-    int nb_char, nbFois, idSocket;
+    int nb_char, idSocket;
     DictOscFunction dictOscFunctions;
+    
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     
     dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
     
     ArRef<Action> action = Action::getInstance();
     idSocket = action->getIdCommandSocket();
 	
-	nbFois = 0;
-	
-	cout<<"Thread cree"<<endl;
+	cout<<"Communication lancée"<<endl;
 
-	while(nbFois < 20 && action->getIdCommandSocket() != -1)
+	while(1)
 	{
-		cout<<"Socket="<<idSocket<<endl;
 		receive(idSocket, buf, &nb_char);
 		if(nb_char > 0)
 			read_buf(buf, &nb_char, &dictOscFunctions);
-		nbFois++;
 	}
 	
-	cout<<"Thread termine"<<endl;
 	return NULL;
 }
 
@@ -847,7 +844,6 @@ if(action->getIdCommandSocket() != -1)
 		fprintf(stderr, "Error creating command receiver thread\n");
 	}
 	action->setTaskCommand(thr);
-	cout<<"Socket="<<action->getIdCommandSocket()<<endl;
 }
 else
 	fprintf(stderr, "Error creating command receiver socket\n");
@@ -872,9 +868,8 @@ ArRef<Action> action = Action::getInstance();
 int idSocket = action->getIdCommandSocket();
 if(idSocket != -1)
 {
-	cout<<"Socket="<<idSocket<<endl;
-	cout<<"Close socket "<<close(idSocket)<<endl;
 	action->setIdCommandSocket(-1);
+	pthread_cancel(action->getTaskCommand());
 	pthread_join(action->getTaskCommand(), NULL);
 }
 
