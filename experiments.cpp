@@ -80,7 +80,6 @@ void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
 void *commandReceiver(void* arg)
 {
 	int * port = (int *) arg;
-	int i;
 	char buf[10000];
     int nb_char;
     DictOscFunction dictOscFunctions;
@@ -108,7 +107,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Error creating command receiver thread\n");
 	}
     
-    printf("Close socket\n");
-    close(s);
+    //printf("Close socket\n");
+    //close(s);
     pthread_join(mythread, NULL);
 }
