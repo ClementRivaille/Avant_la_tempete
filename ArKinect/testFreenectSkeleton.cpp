@@ -544,13 +544,15 @@ for (int i(0);i<480;++i)
 if (!_points->applyChanges(true))
   { cerr<<"Invalid point set"<<endl; }
   
-  
+/*  
 //tempete 
 //directions aleatoires
 const double angle = M_PI/4;
 _tempest->pitch(ArSystem::realRand()*angle);
 _tempest->yaw(ArSystem::realRand()*angle);
-_tempest->update(dt);  
+_tempest->update(dt); 
+
+*/
   
 return true;
 }
@@ -653,6 +655,9 @@ void Action::_initTempest()
 {
 	_renderer->accessScene()->addParticleSystem(_tempest);
 	_tempest->setLocation(_startLocation);
+	
+	_tempest->setSection(25.0,25.0,0.0,0.0,true);
+	
 	_tempest->setParticleRate(400.0);
 	_tempest->setGravity(0.0,0.0,0.0);
 	_tempest->setEmissionSpeed(40.0);
