@@ -510,6 +510,7 @@ else if (v>=480)
 bool
 Action::_action(ArRef<Activity>, double)
 {
+	/*
 const double a_d = -0.0030711;
 const double b_d = 3.3309495;
 const double fx = 594.21;
@@ -580,6 +581,11 @@ for (int i(0);i<480;++i)
       { depth = 0.0; }
     vertices[i*640+j]=Util3D::Dbl3(depth,x,-y);
     
+    
+    */
+    
+    
+    
     /*
     int u,v;
     _computeColorCoordinatesForPoint(Vector3d(x,y,depth),u,v);
@@ -590,6 +596,12 @@ for (int i(0);i<480;++i)
     const double b = rgb[colorOffset+2]/256.0;
     colors[i*640+j]=Util3D::Dbl3(r,g,b);
     */
+    
+    
+    
+    /*
+    
+    
     if (keep)
       {  
       const double v =  0.005 * 
@@ -610,6 +622,11 @@ for (int i(0);i<480;++i)
 
 if (!_points->applyChanges(true))
   { cerr<<"Invalid point set"<<endl; }
+  
+  
+  */
+  
+  
 return true;
 }
 
@@ -915,8 +932,8 @@ main(int argc,
 {
 ArSystem arevi(argc,argv);
 //ArSystem::loadPlugin("OSXImageLoader");
-ArSystem::loadPlugin("Imlib2ImageLoader");
-ArSystem::loadPlugin("MagickImageLoader");
+//ArSystem::loadPlugin("Imlib2ImageLoader");
+//ArSystem::loadPlugin("MagickImageLoader");
 
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
