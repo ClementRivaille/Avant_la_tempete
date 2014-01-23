@@ -3,6 +3,7 @@
 //pour le viewer
 #include "AReVi/Lib3D/viewer3D.h"
 #include "AReVi/Lib3D/scene3D.h"
+#include "AReVi/activity.h"
 
 //pour le systeme de particules
 #include "AReVi/Lib3D/particleSystem.h"
@@ -18,6 +19,8 @@ class MonViewer : public Viewer3D
 public:
 	AR_CLASS(MonViewer)
 	AR_CONSTRUCTOR(MonViewer)
+	
+	virtual bool activate(ArRef<Activity> act, double dt);
 	
 protected:
 	ArRef<Scene3D> m_scene;
@@ -42,10 +45,19 @@ MonViewer::MonViewer(ArCW & arCW)
 	
 	//scene a afficher
 	selectScene(m_scene);
+	
+	//creation de l'activite
+	ArRef<Activity> activity = Activity::NEW(1.0/30.0);
+	activity->setBehavior(thisRef(),&MonViewer::activate);
 }
 
 MonViewer::~MonViewer()
 {}
+
+bool MonViewer::activate(ArRef<Activity>, double dt)
+{
+	m_particles->update(dt);
+}
 
 
 
