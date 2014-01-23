@@ -23,6 +23,7 @@ using namespace std;
 
 
 #include "AReVi/Lib3D/particleSystem.h"
+#include "AReVi/Lib3D/urlTexture.h"
 
 
 using std::cout;
@@ -305,6 +306,10 @@ protected:
   virtual
   void
   _initTempest();
+  
+  virtual
+  void
+  _tempestFollow(double dt);
 
 protected:
   ArRef<Object3D> _obj;
@@ -322,6 +327,14 @@ protected:
   
   //ajout d'un systeme de particules, similaire a tempest dans app.cpp
   ArRef<ParticleSystem> _tempest;
+  ArRef<URLTexture> _tempestTexture;
+  double _tempestEmissionSpeed;
+  bool _tempestVisible;
+  double _tempestX;
+  bool _tempestFollowing;
+  double _tempestYaw;
+  double _tempestPitch;
+  double _tempestChangeDelay;
 
   
 };
@@ -339,7 +352,12 @@ Action::Action( ArCW & arCW)
   _thickness(7),
   _startLocation(Base3D::NEW()),
   //ajout en rapport avec les particules
-  _tempest(ParticleSystem::NEW())
+  _tempest(ParticleSystem::NEW()),
+  _tempestVisible(true),
+  _tempestFollowing(false),
+  _tempestYaw(0.0),
+  _tempestPitch(0.0),
+  _tempestChangeDelay(0.01)
 {
 _startLocation->setPosition(1.9364, 5.73606, -0.117783);
 _startLocation->setOrientation(-0.173945,0.00944314, -0.342706);
@@ -561,15 +579,9 @@ if (!_points->applyChanges(true))
   */
   
   
-/*  
-//tempete 
-//directions aleatoires
-const double angle = M_PI/4;
-_tempest->pitch(ArSystem::realRand()*angle);
-_tempest->yaw(ArSystem::realRand()*angle);
-_tempest->update(dt); 
-
-*/
+//tempete
+_tempestFollow(dt);
+_tempest->update(dt);
   
 return true;
 }
@@ -670,19 +682,42 @@ if (!event.pressed)
 //systeme de particules
 void Action::_initTempest()
 {
-	_renderer->accessScene()->addParticleSystem(_tempest);
+	/*_renderer->accessScene()->addParticleSystem(_tempest);
 	_tempest->setLocation(_startLocation);
-	
-	//_tempest->translate(0.0,0.0,0.0);
-	_tempest->setPosition(0.0,0.0,0.0);
-	
-	_tempest->setSection(25.0,25.0,0.0,0.0,true);
-	
-	_tempest->setParticleRate(400.0);
-	_tempest->setGravity(0.0,0.0,0.0);
-	_tempest->setEmissionSpeed(40.0);
+    _tempest->setGravity(0.0,0.0,0.0);*/
+    
+    _tempestX = -5.0;
+	_tempestEmissionSpeed = 40.0;
+	_tempestTexture = URLTexture::NEW("data/rond.png",false,false);
+	_renderer->accessScene()->addParticleSystem(_tempest);
+	_tempest->setLocation(_renderer);
+	_tempest->translate(_tempestX,0.0,0.0);
+	_tempest->setSection(25.0,25.0,0.0,0.0,true); //rounded
+	_tempest->setEmissionSpeed(_tempestEmissionSpeed);
 	_tempest->setEmissionSpeedDispersion(0.5);
 	_tempest->setInitialAngleDispersion(0.1);
+	_tempest->setParticleDuration(5.0);
+	_tempest->setLighting(false);
+	_tempest->setSize(0.04,0.04);
+	_tempest->setSizeDispersion(0.01,0.01);
+	_tempest->setColor(1.0,1.0,1.0,1.0);
+	_tempest->setTexture(_tempestTexture);
+	_tempest->setParticleRate(400.0);
+	_tempest->setGravity(0.0,0.0,0.0);
+}
+
+void Action::_tempestFollow(double dt)
+{
+	double x = 0;
+	_renderer->globalToLocalPosition(x,x,x);
+	_tempest->setLocation(_renderer);
+	
+	const double angle = M_PI/4; //45deg
+	_tempestYaw = ArSystem::realRand()*angle -  0.5*angle;
+	_tempestPitch = ArSystem::realRand()*angle -  0.5*angle;
+	_tempest->pitch(_tempestPitch);
+	_tempest->yaw(_tempestYaw);
+	_tempest->translate(_tempestX,0.0,0.0);
 }
 
 
