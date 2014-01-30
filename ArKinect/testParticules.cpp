@@ -23,7 +23,7 @@ public:
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
-	virtual void compute() const = 0;
+	virtual void compute(StlList<ParticleEuler *> & particles) const = 0;
 	
 protected:
 	Util3D::Dbl3 m_origin;
@@ -45,6 +45,14 @@ const Util3D::Dbl3 & Potentiel::getOrigin() const
 	return m_origin;
 }
 
+//-----------------------------------------
+//classe concrete de potentiel : attracteur
+//-----------------------------------------
+class Attracteur : public Potentiel
+{
+public:
+	virtual void compute(StlList<ParticleEuler *> & particles) const;
+};
 
 //-----------------------------------------
 //classe de ParticleSystem modifiee
