@@ -25,7 +25,29 @@ public:
 	
 	~Vecteur(){};
 
+	const double & x() const
+	{
+		return m_coord.x;
+	}
+	
+	const double & y() const
+	{
+		return m_coord.y;
+	}
+	
+	const double & z() const
+	{
+		return m_coord.z;
+	}
+	
 	Vecteur(const Util3D::Dbl3 & v)
+	{
+		m_coord.x = v.x;
+		m_coord.y = v.y;
+		m_coord.z = v.z;
+	}
+	
+	Vecteur(const Util3D::Dbl4 & v)
 	{
 		m_coord.x = v.x;
 		m_coord.y = v.y;
@@ -37,6 +59,14 @@ public:
 		m_coord.x = v.m_coord.x;
 		m_coord.y = v.m_coord.y;
 		m_coord.z = v.m_coord.z;
+	}
+	
+	Vecteur & operator= (const Vecteur & v)
+	{
+		m_coord.x = v.m_coord.x;
+		m_coord.y = v.m_coord.y;
+		m_coord.z = v.m_coord.z;
+		return (*this);
 	}
 
 	Vecteur operator+ (const Vecteur & v) const
@@ -89,6 +119,14 @@ public:
 		return res;
 	}
 	
+	Vecteur & operator+= (const Vecteur & v)
+	{
+		m_coord.x += v.m_coord.x;
+		m_coord.y += v.m_coord.y;
+		m_coord.z += v.m_coord.z;
+		return (*this);
+	}
+	
 	double norm2() const
 	{
 		return (*this)*(*this);
@@ -102,6 +140,11 @@ public:
 	Vecteur normalized() const
 	{
 		return (*this)/norm();
+	}
+	
+	Util3D::Dbl3 structure() const
+	{
+		return m_coord;
 	}
 	
 };
@@ -159,19 +202,19 @@ void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const
 	while(it != particles.end())
 	{
 		//calcul de la distance entre particule et origine
-		Util3D::Dbl3 distance;
-		distance.x = *it->getPosition().x - m_origin.x;
-		distance.y = *it->getPosition().y - m_origin.y;
-		distance.z = *it->getPosition().z - m_origin.z;
-		
-		//calcul de la norme au carre de la distance
-		double sqNorm = distance.x*distance.x + distance.y*distance.y + distance.z*distance.z;
+		Vecteur p(*it->getPosition());
+		Vecteur o(m_origin);
+		Vecteur distance = p-o;
 		
 		//calcul de la force exercee
 		//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
+		Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
 		
+		//ajout a la somme des forces subies par la particule
+		Vecteur resultante = *it->getForce();
+		resultante += force;
 		
-		*it->accessForce += 
+		*it->accessForce()(resultante.structure());
 	}
 }
 
