@@ -35,7 +35,7 @@ MonViewer::MonViewer(ArCW & arCW)
 	  m_particles(ParticleSystem::NEW())
 {	
 	//ajout du systeme de particules a la scene
-	m_scene->addObject(m_particles);
+	m_scene->addParticleSystem(m_particles);
 
 	//position du systeme de particules dans la scene
 	m_particles->setPosition(0,0,0);
@@ -70,7 +70,7 @@ ArRef<Viewer3D> viewer;	//globale d'apres conseil du tutoriel / en conflit avec 
 
 ArRef<Scheduler> simulationInit(void)
 {
-	ArRef<Sheduler> scd = RealTimeScheduler::NEW(1e-3);
+	ArRef<Scheduler> scd = RealTimeScheduler::NEW(1e-3);
 	
 	viewer = MonViewer::NEW();
 	viewer->setCloseAction(Window3D::CLOSE_LEAVE);
