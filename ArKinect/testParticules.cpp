@@ -12,6 +12,54 @@ using namespace AReVi;
 
 
 //-----------------------------------------
+//classe de ParticleSystem modifiee
+//-----------------------------------------
+class ParticlesEtForces : public ParticleSystem
+{
+public:
+	AR_CLASS(ParticlesEtForces)
+	AR_CONSTRUCTOR(ParticlesEtForces)
+	
+	
+	//classe de particules capables de retenir la force exercée, point de vue eulérien
+	class ParticleEuler : public ParticleSystem::Particle
+	{
+	public:
+	
+		ParticleEuler(const ParticleSystem::Particle & p);
+	
+		inline const Util3D::Dbl3 & getForce(void) const
+		{
+			return forceResultante;
+		}
+		inline Util3D::Dbl3 & accessForce(void)
+		{
+			return forceResultante;
+		}
+		
+	private:
+		friend class ParticlesEtForces;
+		ParticleEuler(void);
+		ParticleEuler(const ParticleEuler & p);
+		ParticleEuler & operator=(const Particle & p);
+		ParticleEuler & operator=(const ParticleEuler & p);
+		
+	protected:
+		Util3D::Dbl3 forceResultante;
+	};
+	
+	//redefinition(s) necessaire(s) a l'utilisation de ParticleEuler
+	virtual bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut);
+	
+protected:
+	StlVector<Potentiel *> m_potentiels;
+
+	//calcul des forces exercees sur les particules baignees dans un champ de potentiel
+	void calculForces(SltList<ParticleEuler *> & _partEuler);
+};
+
+
+//-----------------------------------------
 //classe de viewer perso
 //-----------------------------------------
 class MonViewer : public Viewer3D
