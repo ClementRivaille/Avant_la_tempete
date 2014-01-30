@@ -23,46 +23,13 @@ using namespace std;
 //----------------------------------------------------------------------------
 // Librairies pour la pour la réception de commandes en OSC
 //----------------------------------------------------------------------------
-#include <stdio.h>
 #include <pthread.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <assert.h>
-#include <string>
-#include <string.h>
-#include <map>
+#include "ReceiveOSCorder.h"
 
 
 using std::cout;
 using std::endl;
 using std::cerr;
-
-//----------------------------------------------------------------------------
-// Définition des types pour la réception de commandes en OSC
-//----------------------------------------------------------------------------
-
-/**
- * Functions called by a OSC message. Takes one integer as parameter.
- */
-typedef void (*OscFunction)(unsigned int);
-
-/**
- * Operator used to compare two functions' name
- */
-struct comparer
-{
-    public:
-    bool operator()(const std::string x, const std::string y)
-    {
-         return x.compare(y)<0;
-    }
-};
-
-/**
- * Dictionary linking names to OscFunctions
- */
-typedef std::map<std::string, OscFunction, comparer> DictOscFunction;
 
 //----------------------------------------------------------------------------
 // algos pour skeletiser
@@ -330,12 +297,6 @@ public:
   static ArRef<Action> getInstance();
   
   /**
-   * Setter and getter of the id of the socket that receives command
-   */
-  void setIdCommandSocket(int idSocket);  
-  int getIdCommandSocket();
-  
-  /**
    * Setter and getter of the p_thread in charge of the messages' reception
    */
   void setTaskCommand(pthread_t);
@@ -377,8 +338,6 @@ protected:
   
   /** P_thread in charge of the reception of commands */
   pthread_t _taskCommand;
-  /** Socket receiving messages */
-  int _idCommandSocket;
   
   /** Singleton instance */
   static ArRef<Action> _instance;
@@ -736,16 +695,6 @@ void Action::updateThickness(bool direction)
   this->_points->setThickness(_thickness);
 }
 
-void Action::setIdCommandSocket(int idSocket)
-{
-	_idCommandSocket = idSocket;
-}
-
-int Action::getIdCommandSocket()
-{
-	return _idCommandSocket;
-}
-
 void Action::setTaskCommand(pthread_t thr)
 {
 	_taskCommand = thr;
@@ -760,78 +709,6 @@ pthread_t Action::getTaskCommand()
 //----------------------------------------------------------------------------
 // Fonctions de réception de commandes en OSC
 //----------------------------------------------------------------------------
-
-/**
- * Initialisation of the command receiver socket
- * @param port : port of the socket
- * @return file descriptor of the socket or -1 in case of error
- */
-int init_socket(int port)
-{
-    sockaddr_in si_me;
-    int s;
-    int broadcast=1;
-    
-    if((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) !=-1)
-    {		
-		setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast);
-
-		memset(&si_me, 0, sizeof(si_me));
-		si_me.sin_family = AF_INET;
-		si_me.sin_port = htons(port);
-		si_me.sin_addr.s_addr = INADDR_ANY;
-		
-		if(bind(s, (sockaddr *)&si_me, sizeof(sockaddr)) == -1)
-			return -1;
-	}
-    return s;
-}
-
-/**
- * Receive a message from the socket. The message is an OSC request.
- * @param s : socket that receives the message
- * @param buf : buffer in which the message is stored
- * @param nb_char : size of the received message
- */
-void receive(int s, char * buf, int * nb_char)
-{
-    // Message's sender
-    sockaddr_in si_other;
-    
-    // Reception
-    unsigned slen=sizeof(sockaddr);
-    *nb_char = recvfrom(s, buf, 1000, 0, (sockaddr *)&si_other, &slen);
-
-    // We print the received message and its size
-    printf("recv: %s\n", buf);
-    printf("nb_char: %d\n", *nb_char);
-}
-
-/**
- * Read and executes a message received. Messages are composed of the name of a function, and a value.
- * @param buf : message
- * @param nb_char : size of the message
- * @param dict : dictionnary linking names of functions to functions
- */
-void read_buf(char * buf, int * nb_char, DictOscFunction* dict)
-{
-    printf("Receive string : %s\n", buf);
-    // Acquiring the function's name
-    std::string functionName(buf);
-    // The value is at the end of the OSC message
-   	char * end = buf + *nb_char - 1;
-    // Getting the value, and converting it to an integer
-	unsigned char result = (unsigned char)*end;
-	unsigned int result2 = 0x00FF&result;
-	printf("Receive parameter : %u\n", result2);
-	
-    // We check if the dictionary contains the function
-    DictOscFunction::const_iterator ptrF;
-    ptrF = (*dict).find(functionName);
-    if (ptrF != (*dict).end())
-        // If so, we call the function with the given value as parameter
-        (*ptrF->second)(result2);
-}
 
 /**
  * Call the function Action::updateThickness that increase or reduce the pixels' size.
@@ -849,34 +726,18 @@ void updateThickness(unsigned int a)
  */
 void *commandReceiver(void*)
 {	
-    // Messages' buffer
-	char buf[1000];    
-    // Size of messages and socket's id
-    int nb_char, idSocket;
-    // Dictionary of functions
-    DictOscFunction dictOscFunctions;
-    
-    // We allows the thread to be stopped at the end of application
+    // We allows the thread to be stopped at the end of the application
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     
-    // Linking functions to their names in the dictionnary
-    dictOscFunctions.insert(std::pair<std::string,OscFunction>("thickness",updateThickness));
+    ReceiveOSCorder receiver(7400);
     
-    // Getting the socket's id from the instance of action
-    ArRef<Action> action = Action::getInstance();
-    idSocket = action->getIdCommandSocket();
-	
-	cout<<"Communication lancée"<<endl;
+	receiver.addOscFunction("thickness", updateThickness);
 
     // Starting the reception
 	while(1)
 	{
-        // Receiving the message
-		receive(idSocket, buf, &nb_char);
-        // If not empty, reading and executing it
-		if(nb_char > 0)
-			read_buf(buf, &nb_char, &dictOscFunctions);
+       receiver.startCommunication();
 	}
 	
 	return NULL;
@@ -908,20 +769,12 @@ v->addKeyboardCB(action, &Action::keyboardCB);
 //v->setStereoMode(Renderer3D::STEREO_SPLIT);
 v->setDecoration(false);
 
-//creation de la socket de command receiver
-action->setIdCommandSocket(init_socket(7400));
-
-if(action->getIdCommandSocket() != -1)
-{
-	pthread_t thr;
-	//création du thread de réception de commandes OSC
-	if(pthread_create(&thr, NULL, commandReceiver, NULL)) {
-		fprintf(stderr, "Error creating command receiver thread\n");
-	}
-	action->setTaskCommand(thr);
+pthread_t thr;
+//création du thread de réception de commandes OSC
+if(pthread_create(&thr, NULL, commandReceiver, NULL)) {
+	fprintf(stderr, "Error creating command receiver thread\n");
 }
-else
-	fprintf(stderr, "Error creating command receiver socket\n");
+action->setTaskCommand(thr);
 
 return(sched);
 }
@@ -938,15 +791,10 @@ ArSystem arevi(argc,argv);
 Action::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 
-//quits the application -> closes the socket and cancels the command receiver thread
+//quit the application -> cancel the command receiver thread
 ArRef<Action> action = Action::getInstance();
-int idSocket = action->getIdCommandSocket();
-if(idSocket != -1)
-{
-	action->setIdCommandSocket(-1);
-	pthread_cancel(action->getTaskCommand());
-	pthread_join(action->getTaskCommand(), NULL);
-}
+pthread_cancel(action->getTaskCommand());
+pthread_join(action->getTaskCommand(), NULL);
 
 return(0);
 }

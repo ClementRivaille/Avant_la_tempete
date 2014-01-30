@@ -1,0 +1,67 @@
+Import('globalEnv')
+Import('openKinect')
+Import('niFound')
+Import('wiimote')
+from arBuildUtils import *
+env = globalEnv.Clone()
+
+eyeEnv = globalEnv.Clone()
+
+niEnv = globalEnv.Clone()
+
+print
+print "============== tests ArKinect ================="
+
+#---------- eye uses anim lib
+eye = False
+conf = Configure(eyeEnv)
+if conf.CheckLib("AnimLib"):
+  eye = True
+eyeEnv = conf.Finish()
+
+#---------- Executable settings ----------------------------------------------
+if openKinect:
+  env.Prepend(CPPPATH="/usr/local/include/libfreenect")
+  if eye:
+    eyeEnv.Prepend(CPPPATH="/usr/local/include/libfreenect")
+    eyeEnv.PrependUnique(LIBS="AnimLib")
+    arProgram( env = eyeEnv, srcList = ["eye.cpp","bigEye.cpp"] )
+
+  arProgram( env = env, srcList = ["testFreenect.cpp"] )
+  arProgram( env = env, srcList = ["testFreenectMin.cpp"] )
+  arProgram( env = env, srcList = ["testFreenectSkeleton.cpp", "ReceiveOSCorder.cpp"] )
+
+  if wiimote:
+    env.PrependUnique(LIBPATH="#lib")
+    env.PrependUnique(LIBS="arWiiLib")
+    env.PrependUnique(CPPPATH="#include")
+    arProgram( env = env, srcList = ["testMemorize.cpp"] )
+
+if niFound:
+  hLib=True
+  niEnv.PrependUnique(LIBPATH="#lib")
+  niEnv.PrependUnique(LIBS="ArKinect")
+  niEnv.PrependUnique(LIBS="AReViHLib2")
+  niEnv.PrependUnique(CPPPATH=['#include'])
+  niEnv.PrependUnique(CPPPATH=['/usr/include/ni'])
+#  conf = Configure(niEnv)
+#  if not conf.CheckLib('AReViHLib2'):
+#    print "Missing hLib library."
+#    hLib=False
+#  niEnv = conf.Finish()
+  if hLib:
+    arProgram( env=niEnv,
+             name="testAReViNI",
+             srcList= ["testAReViNI.cpp"])
+  if hLib and eye and wiimote:
+    niEnv.PrependUnique(LIBPATH="#lib")
+    niEnv.PrependUnique(LIBS="arWiiLib")
+    niEnv.PrependUnique(CPPPATH="#include")
+    niEnv.AppendUnique(LIBS="AnimLib")
+    arProgram(env = niEnv, srcList = ["eyeNI.cpp","bigEye.cpp"] )
+
+    niEnv.PrependUnique(LIBS="arMoven")
+    arProgram(env=niEnv,srcList=["skinsNI.cpp"])
+
+addFontsDirectories(env,'#Tests/ArKinect')
+
