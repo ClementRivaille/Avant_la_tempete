@@ -19,7 +19,11 @@ public:
 	Potentiel();
 	virtual ~Potentiel();
 	
-	virtual compute() const = 0;
+	virtual Util3D::Dbl3 & setOrigin();
+	
+	virtual const Util3D::Dbl3 & getOrigin() const;
+	
+	virtual void compute() const = 0;
 	
 protected:
 	Util3D::Dbl3 m_origin;
