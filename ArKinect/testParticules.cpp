@@ -19,7 +19,7 @@ public:
 	Potentiel();
 	virtual ~Potentiel();
 	
-	virtual Util3D::Dbl3 & setOrigin();
+	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
@@ -28,6 +28,23 @@ public:
 protected:
 	Util3D::Dbl3 m_origin;
 };
+
+Potentiel::Potentiel()
+{}
+
+Potentiel::~Potentiel()
+{}
+
+void Potentiel::setOrigin(const Util3D::Dbl3 & pos)
+{
+	m_origin = pos;
+}
+
+const Util3D::Dbl3 & Potentiel::getOrigin() const
+{
+	return m_origin;
+}
+
 
 //-----------------------------------------
 //classe de ParticleSystem modifiee
