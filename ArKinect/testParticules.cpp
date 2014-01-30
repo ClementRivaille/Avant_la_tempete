@@ -10,6 +10,20 @@
 
 using namespace AReVi;
 
+//-----------------------------------------
+//classe abstraite de potentiels
+//-----------------------------------------
+class Potentiel
+{
+public:
+	Potentiel();
+	virtual ~Potentiel();
+	
+	virtual compute() const = 0;
+	
+protected:
+	Util3D::Dbl3 m_origin;
+};
 
 //-----------------------------------------
 //classe de ParticleSystem modifiee
