@@ -191,18 +191,15 @@ const Util3D::Dbl3 & Potentiel::getOrigin() const
 class Attracteur : public Potentiel
 {
 public:
-	virtual void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const;
+	virtual void compute(ParticlesEtForces::ParticleEuler & particle) const;
 };
 
-void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const
+void compute(ParticlesEtForces::ParticleEuler & particle) const
 {
-	//calcul de la force exercee sur chaque particule
-	StlList<ParticlesEtForces::ParticleEuler *>::iterator it;
-	it=particles.begin();
-	while(it != particles.end())
+	//calcul de la force exercee sur la particule
 	{
 		//calcul de la distance entre particule et origine
-		Vecteur p(*it->getPosition());
+		Vecteur p(particule.getPosition());
 		Vecteur o(m_origin);
 		Vecteur distance = p-o;
 		
@@ -211,10 +208,10 @@ void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const
 		Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
 		
 		//ajout a la somme des forces subies par la particule
-		Vecteur resultante = *it->getForce();
+		Vecteur resultante = particle.getForce();
 		resultante += force;
 		
-		*it->accessForce()(resultante.structure());
+		particle.accessForce()(resultante.structure());
 	}
 }
 
@@ -261,8 +258,8 @@ public:
 protected:
 	StlVector<Potentiel *> m_potentiels;
 
-	//calcul des forces exercees sur les particules baignees dans un champ de potentiel
-	void calculForces(StlList<ParticleEuler *> & _partEuler);
+	//calcul des forces exercees sur une particule baignee dans un champ de potentiel
+	void calculForces(ParticlesEtForces::ParticleEuler & partEuler);
 };
 
 
