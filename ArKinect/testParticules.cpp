@@ -8,7 +8,103 @@
 //pour le systeme de particules
 #include "AReVi/Lib3D/particleSystem.h"
 
+#include <cmath>
+
 using namespace AReVi;
+
+//-----------------------------------------
+//classe de vecteur a 3 dimensions
+//-----------------------------------------
+class Vecteur
+{
+protected:
+	Util3D::Dbl3 m_coord;
+	
+public:
+	Vecteur(){};
+	
+	~Vecteur(){};
+
+	Vecteur(const Util3D::Dbl3 & v)
+	{
+		m_coord.x = v.x;
+		m_coord.y = v.y;
+		m_coord.z = v.z;
+	}
+	
+	Vecteur(const Vecteur & v)
+	{
+		m_coord.x = v.m_coord.x;
+		m_coord.y = v.m_coord.y;
+		m_coord.z = v.m_coord.z;
+	}
+
+	Vecteur operator+ (const Vecteur & v) const
+	{
+		Vecteur res;
+		res.m_coord.x = m_coord.x + v.m_coord.x;
+		res.m_coord.y = m_coord.y + v.m_coord.y;
+		res.m_coord.z = m_coord.z + v.m_coord.z;
+		return res;
+	}
+	
+	Vecteur operator- (const Vecteur & v) const
+	{
+		Vecteur res;
+		res.m_coord.x = m_coord.x - v.m_coord.x;
+		res.m_coord.y = m_coord.y - v.m_coord.y;
+		res.m_coord.z = m_coord.z - v.m_coord.z;
+		return res;
+	}
+	
+	Vecteur operator- () const
+	{
+		Vecteur res;
+		res.m_coord.x = -m_coord.x;
+		res.m_coord.y = -m_coord.y;
+		res.m_coord.z = -m_coord.z;
+		return res;
+	}
+	
+	double operator* (const Vecteur & v) const
+	{
+		return m_coord.x*v.m_coord.x + m_coord.y*v.m_coord.y + m_coord.z*v.m_coord.z;
+	}
+	
+	Vecteur operator* (double & d) const
+	{
+		Vecteur res;
+		res.m_coord.x = m_coord.x*d;
+		res.m_coord.y = m_coord.y*d;
+		res.m_coord.z = m_coord.z*d;
+		return res;
+	}
+	
+	Vecteur operator/ (double & d) const
+	{
+		Vecteur res;
+		res.m_coord.x = m_coord.x/d;
+		res.m_coord.y = m_coord.y/d;
+		res.m_coord.z = m_coord.z/d;
+		return res;
+	}
+	
+	double norm2() const
+	{
+		return (*this)*(*this);
+	}
+	
+	double norm() const
+	{
+		return pow(this->norm2,0.5);
+	}
+	
+	Vecteur normalized() const
+	{
+		return (*this)/norm();
+	}
+	
+};
 
 //-----------------------------------------
 //classe abstraite de potentiels
@@ -23,7 +119,7 @@ public:
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
-	virtual void compute(StlList<ParticleEuler *> & particles) const = 0;
+	virtual void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const = 0;
 	
 protected:
 	Util3D::Dbl3 m_origin;
@@ -48,11 +144,36 @@ const Util3D::Dbl3 & Potentiel::getOrigin() const
 //-----------------------------------------
 //classe concrete de potentiel : attracteur
 //-----------------------------------------
+//attracteur proportionnel a l'inverse du carre de la distance, type gravitation
 class Attracteur : public Potentiel
 {
 public:
-	virtual void compute(StlList<ParticleEuler *> & particles) const;
+	virtual void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const;
 };
+
+void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const
+{
+	//calcul de la force exercee sur chaque particule
+	StlList<ParticlesEtForces::ParticleEuler *>::iterator it;
+	it=particles.begin();
+	while(it != particles.end())
+	{
+		//calcul de la distance entre particule et origine
+		Util3D::Dbl3 distance;
+		distance.x = *it->getPosition().x - m_origin.x;
+		distance.y = *it->getPosition().y - m_origin.y;
+		distance.z = *it->getPosition().z - m_origin.z;
+		
+		//calcul de la norme au carre de la distance
+		double sqNorm = distance.x*distance.x + distance.y*distance.y + distance.z*distance.z;
+		
+		//calcul de la force exercee
+		//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
+		
+		
+		*it->accessForce += 
+	}
+}
 
 //-----------------------------------------
 //classe de ParticleSystem modifiee
