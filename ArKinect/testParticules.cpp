@@ -90,7 +90,7 @@ protected:
 	StlVector<Potentiel *> m_potentiels;
 
 	//calcul des forces exercees sur les particules baignees dans un champ de potentiel
-	void calculForces(SltList<ParticleEuler *> & _partEuler);
+	void calculForces(StlList<ParticleEuler *> & _partEuler);
 };
 
 
@@ -168,7 +168,7 @@ ArRef<Scheduler> simulationInit(void)
 
 int main(int argc, char** argv)
 {
-	ArSystem arevi(arg,argv);
+	ArSystem arevi(argc,argv);
 	MonViewer::REGISTER_CLASS();
 	
 	ArSystem::simulationLoop(&simulationInit);
