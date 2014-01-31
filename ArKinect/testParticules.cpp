@@ -162,7 +162,7 @@ public:
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
-	virtual void compute(StlList<ParticlesEtForces::ParticleEuler *> & particles) const = 0;
+	virtual void compute(ParticlesEtForces::ParticleEuler & particle) const = 0;
 	
 protected:
 	Util3D::Dbl3 m_origin;
@@ -256,12 +256,57 @@ public:
 	virtual bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut);
 	
 protected:
-	StlVector<Potentiel *> m_potentiels;
+	StlVector<Potentiel *> m_potentiels;	//ensemble des potentiels du systeme de particules
 
-	//calcul des forces exercees sur une particule baignee dans un champ de potentiel
-	void calculForces(ParticlesEtForces::ParticleEuler & partEuler);
 };
 
+AR_CLASS_DEF(ParticlesEtForces,ParticleSystem)
+
+ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
+	: ParticleSystem(arCW)
+{}
+
+ParticleEuler::~ParticleEuler()
+{}
+
+bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut)
+{
+	if(particleInOut.getCollider())
+	{
+		particleInOut.accessPosition().x = particleInOut.getOldPosition().x
+										 + particleInOut.getSpeed().x*dt;
+		particleInOut.accessPosition().y = particleInOut.getOldPosition().y
+										 + particleInOut.getSpeed().y*dt;
+		particleInOut.accessPosition().z = particleInOut.getOldPosition().z
+										 + particleInOut.getSpeed().z*dt;
+	}
+	else
+	{
+		particleInOut.accessOldPosition().x = particleInOut.getPosition().x;
+		particleInOut.accessOldPosition().y = particleInOut.getPosition().y;
+		particleInOut.accessOldPosition().z = particleInOut.getPosition().z;
+		
+		double d = 0.5*dt*dt;
+		
+		//calculer la force resultante
+		ParticlesEtForces::ParticleEuler part(particleInOut);	//copie de la particule
+		for(int i = 0 ; i < m_potentiels.size() ; i++)
+		{
+			m_potentiels[i]->compute(part);
+		}
+		Util3D::Dbl3 & force = part.getForce();
+		
+		//msie a jour de la particule
+		particleInOut.accessPosition().x += particleInOut.getSpeed().x*dt+force.x*d;
+		particleInOut.accessPosition().y += particleInOut.getSpeed().y*dt+force.y*d;
+		particleInOut.accessPosition().z += particleInOut.getSpeed().z*dt+force.z*d;
+		particleInOut.accessSpeed().x += force.x*dt;
+		particleInOut.accessSpeed().y += force.y*dt;
+		particleInOut.accessSpeed().z += force.z*dt;
+	}
+	particleInOut.accessPosition().a += particleInOut.getSpeed().a*dt;
+	return true;
+}
 
 //-----------------------------------------
 //classe de viewer perso
