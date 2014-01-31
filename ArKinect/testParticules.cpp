@@ -217,7 +217,7 @@ Attracteur::~Attracteur()
 {}
 
 
-Vecteur compute(ParticleSystem::Particle & particle) const
+Vecteur Attracteur::compute(ParticleSystem::Particle & particle) const
 {
 	//calcul de la force exercee sur la particule
 	{
@@ -255,12 +255,17 @@ AR_CLASS_DEF(ParticlesEtForces,ParticleSystem)
 
 ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
 	: ParticleSystem(arCW)
+{
+	ArRef<Potentiel> attrac = Attracteur::NEW();
+	attrac->setOrigin(Util3D::Dbl3(0.0,5.0,5.0));
+	m_potentiels.push_back(attrac);
+	
+}
+
+ParticlesEtForces::~ParticlesEtForces()
 {}
 
-ParticleEuler::~ParticleEuler()
-{}
-
-bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut)
+bool ParticlesEtForces::_updateParticle(double dt, ParticleSystem::Particle & particleInOut)
 {
 	if(particleInOut.getCollider())
 	{
@@ -322,6 +327,7 @@ MonViewer::MonViewer(ArCW & arCW)
 	  m_particles(ParticleSystem::NEW())
 {	
 	//ajout du systeme de particules a la scene
+	m_particles->setGravity(0.0,0.0,0.0);
 	m_scene->addParticleSystem(m_particles);
 
 	//position du systeme de particules dans la scene
