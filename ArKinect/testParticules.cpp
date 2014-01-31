@@ -117,7 +117,7 @@ public:
 		return res;
 	}
 	
-	Vecteur operator/ (double & d) const
+	Vecteur operator/ (double d) const
 	{
 		Vecteur res;
 		res.m_coord.x = m_coord.x/d;
@@ -141,7 +141,7 @@ public:
 	
 	double norm() const
 	{
-		return pow(this->norm2,0.5);
+		return pow(this->norm2(),0.5);
 	}
 	
 	Vecteur normalized() const
