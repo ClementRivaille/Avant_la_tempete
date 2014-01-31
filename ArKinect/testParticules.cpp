@@ -23,6 +23,13 @@ protected:
 public:
 	Vecteur(){};
 	
+	Vecteur(double x, double y, double z)
+	{
+		m_coord.x = x;
+		m_coord.y = y;
+		m_coord.z = z;
+	}
+	
 	~Vecteur(){};
 
 	const double & x() const
@@ -152,23 +159,26 @@ public:
 //-----------------------------------------
 //classe abstraite de potentiels
 //-----------------------------------------
-class Potentiel
+class Potentiel : public ArObject
 {
 public:
-	Potentiel();
-	virtual ~Potentiel();
+	AR_CLASS(Potentiel)
+	AR_CONSTRUCTOR(Potentiel)
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
-	virtual void compute(ParticlesEtForces::ParticleEuler & particle) const = 0;
+	virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
 	
 protected:
 	Util3D::Dbl3 m_origin;
 };
 
-Potentiel::Potentiel()
+AR_CLASS_DEF(Potentiel, ArObject)
+
+Potentiel::Potentiel(ArCW & arCW)
+	: ArObject(arCW)
 {}
 
 Potentiel::~Potentiel()
@@ -191,10 +201,23 @@ const Util3D::Dbl3 & Potentiel::getOrigin() const
 class Attracteur : public Potentiel
 {
 public:
-	virtual void compute(ParticlesEtForces::ParticleEuler & particle) const;
+	AR_CLASS(Attracteur)
+	AR_CONSTRUCTOR(Attracteur)
+	
+	virtual Vecteur compute(ParticleSystem::Particle & particle) const;
 };
 
-void compute(ParticlesEtForces::ParticleEuler & particle) const
+AR_CLASS_DEF(Attracteur, Potentiel)
+
+Attracteur::Attracteur(ArCW & arCW)
+	: Potentiel(arCW)
+{}
+
+Attracteur::~Attracteur()
+{}
+
+
+Vecteur compute(ParticleSystem::Particle & particle) const
 {
 	//calcul de la force exercee sur la particule
 	{
@@ -207,11 +230,7 @@ void compute(ParticlesEtForces::ParticleEuler & particle) const
 		//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
 		Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
 		
-		//ajout a la somme des forces subies par la particule
-		Vecteur resultante = particle.getForce();
-		resultante += force;
-		
-		particle.accessForce()(resultante.structure());
+		return force;
 	}
 }
 
@@ -224,39 +243,11 @@ public:
 	AR_CLASS(ParticlesEtForces)
 	AR_CONSTRUCTOR(ParticlesEtForces)
 	
-	
-	//classe de particules capables de retenir la force exercée, point de vue eulérien
-	class ParticleEuler : public ParticleSystem::Particle
-	{
-	public:
-	
-		ParticleEuler(const ParticleSystem::Particle & p);
-	
-		inline const Util3D::Dbl3 & getForce(void) const
-		{
-			return forceResultante;
-		}
-		inline Util3D::Dbl3 & accessForce(void)
-		{
-			return forceResultante;
-		}
-		
-	private:
-		friend class ParticlesEtForces;
-		ParticleEuler(void);
-		ParticleEuler(const ParticleEuler & p);
-		ParticleEuler & operator=(const Particle & p);
-		ParticleEuler & operator=(const ParticleEuler & p);
-		
-	protected:
-		Util3D::Dbl3 forceResultante;
-	};
-	
 	//redefinition(s) necessaire(s) a l'utilisation de ParticleEuler
 	virtual bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut);
 	
 protected:
-	StlVector<Potentiel *> m_potentiels;	//ensemble des potentiels du systeme de particules
+	StlVector<ArRef<Potentiel> > m_potentiels;	//ensemble des potentiels du systeme de particules
 
 };
 
@@ -289,20 +280,19 @@ bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut)
 		double d = 0.5*dt*dt;
 		
 		//calculer la force resultante
-		ParticlesEtForces::ParticleEuler part(particleInOut);	//copie de la particule
+		Vecteur resultante(0.0,0.0,0.0);
 		for(int i = 0 ; i < m_potentiels.size() ; i++)
 		{
-			m_potentiels[i]->compute(part);
+			resultante += m_potentiels[i]->compute(part);
 		}
-		Util3D::Dbl3 & force = part.getForce();
 		
 		//msie a jour de la particule
-		particleInOut.accessPosition().x += particleInOut.getSpeed().x*dt+force.x*d;
-		particleInOut.accessPosition().y += particleInOut.getSpeed().y*dt+force.y*d;
-		particleInOut.accessPosition().z += particleInOut.getSpeed().z*dt+force.z*d;
-		particleInOut.accessSpeed().x += force.x*dt;
-		particleInOut.accessSpeed().y += force.y*dt;
-		particleInOut.accessSpeed().z += force.z*dt;
+		particleInOut.accessPosition().x += particleInOut.getSpeed().x*dt+resultante.x()*d;
+		particleInOut.accessPosition().y += particleInOut.getSpeed().y*dt+resultante.y()*d;
+		particleInOut.accessPosition().z += particleInOut.getSpeed().z*dt+resultante.z()*d;
+		particleInOut.accessSpeed().x += resultante.x()*dt;
+		particleInOut.accessSpeed().y += resultante.y()*dt;
+		particleInOut.accessSpeed().z += resultante.z()*dt;
 	}
 	particleInOut.accessPosition().a += particleInOut.getSpeed().a*dt;
 	return true;
