@@ -163,7 +163,6 @@ class Potentiel : public ArObject
 {
 public:
 	AR_CLASS(Potentiel)
-	AR_CONSTRUCTOR(Potentiel)
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
@@ -172,10 +171,13 @@ public:
 	virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
 	
 protected:
+
+	Potentiel(ArCW & arCW);
+
 	Util3D::Dbl3 m_origin;
 };
 
-AR_CLASS_DEF(Potentiel, ArObject)
+AR_CLASS_NOVOID_DEF(Potentiel, ArObject)
 
 Potentiel::Potentiel(ArCW & arCW)
 	: ArObject(arCW)
