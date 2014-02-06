@@ -265,7 +265,7 @@ public:
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
-	virtual Vecteur compute(Util3D::Dbl4 & pos) const = 0;
+	virtual Vecteur compute(const Util3D::Dbl4 & pos) const = 0;
 	
 protected:
 	ChampVitesse(ArCW & arCW);
@@ -301,7 +301,7 @@ public:
 	AR_CLASS(TourbillonVit)
 	AR_CONSTRUCTOR(TourbillonVit)
 	
-	virtual Vecteur compute(Util3D::Dbl4 & pos) const;
+	virtual Vecteur compute(const Util3D::Dbl4 & pos) const;
 	
 	virtual void setAxis(const Util3D::Dbl3 & axis);
 	
@@ -327,7 +327,7 @@ void TourbillonVit::setAxis(const Util3D::Dbl3 & axis)
 }
 
 //calcul de la vitesse instantanee de la particule dans le champ
-Vecteur TourbillonVit::compute(Util3D::Dbl4 & pos) const
+Vecteur TourbillonVit::compute(const Util3D::Dbl4 & pos) const
 {
 	//calcul de la distance entre particule et origine
 	Vecteur p(pos);
@@ -372,10 +372,14 @@ AR_CLASS_DEF(ParticlesEtForces,ParticleSystem)
 ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
 	: ParticleSystem(arCW)
 {
+	//potentiel test
 	ArRef<Potentiel> attrac = Attracteur::NEW();
 	attrac->setOrigin(Util3D::Dbl3(0.0,5.0,5.0));
 	m_potentiels.push_back(attrac);
 	
+	//champ de vitesse test
+	ArRef<ChampVitesse> tourb = TourbillonVit::NEW();	//par defaut, m_axis(0.0,0.0,0.1)
+	m_vitesses.push_back(tourb);
 }
 
 ParticlesEtForces::~ParticlesEtForces()
@@ -407,13 +411,20 @@ bool ParticlesEtForces::_updateParticle(double dt, ParticleSystem::Particle & pa
 			resultante += m_potentiels[i]->compute(particleInOut.getPosition());
 		}
 		
+		//calculer la somme des vitesses appliquees a la particule
+		Vecteur vitesses(0.0,0.0,0.0);
+		for(unsigned int i = 0 ; i < m_vitesses.size() ; i++)
+		{
+			vitesses += m_vitesses[i]->compute(particleInOut.getPosition());
+		}
+		
 		//msie a jour de la particule
-		particleInOut.accessPosition().x += particleInOut.getSpeed().x*dt+resultante.x()*d;
-		particleInOut.accessPosition().y += particleInOut.getSpeed().y*dt+resultante.y()*d;
-		particleInOut.accessPosition().z += particleInOut.getSpeed().z*dt+resultante.z()*d;
-		particleInOut.accessSpeed().x += resultante.x()*dt;
-		particleInOut.accessSpeed().y += resultante.y()*dt;
-		particleInOut.accessSpeed().z += resultante.z()*dt;
+		particleInOut.accessPosition().x += (particleInOut.getSpeed().x + vitesses.x())*dt + resultante.x()*d;
+		particleInOut.accessPosition().y += (particleInOut.getSpeed().y + vitesses.y())*dt + resultante.y()*d;
+		particleInOut.accessPosition().z += (particleInOut.getSpeed().z + vitesses.z())*dt + resultante.z()*d;
+		particleInOut.accessSpeed().x += vitesses.x() + resultante.x()*dt;
+		particleInOut.accessSpeed().y += vitesses.y() + resultante.y()*dt;
+		particleInOut.accessSpeed().z += vitesses.z() + resultante.z()*dt;
 	}
 	particleInOut.accessPosition().a += particleInOut.getSpeed().a*dt;
 	return true;
