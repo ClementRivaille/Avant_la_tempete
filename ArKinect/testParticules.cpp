@@ -395,9 +395,9 @@ bool ParticlesEtForces::_updateParticle(double dt, ParticleSystem::Particle & pa
 		
 		//calculer la force resultante
 		Vecteur resultante(0.0,0.0,0.0);
-		for(int i = 0 ; i < m_potentiels.size() ; i++)
+		for(unsigned int i = 0 ; i < m_potentiels.size() ; i++)
 		{
-			resultante += m_potentiels[i]->compute(part.getPosition());
+			resultante += m_potentiels[i]->compute(particleInOut.getPosition());
 		}
 		
 		//msie a jour de la particule
@@ -459,6 +459,7 @@ MonViewer::~MonViewer()
 bool MonViewer::activate(ArRef<Activity>, double dt)
 {
 	m_particles->update(dt);
+	return true;
 }
 
 
