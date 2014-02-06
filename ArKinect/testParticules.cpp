@@ -47,6 +47,23 @@ public:
 		return m_coord.z;
 	}
 	
+	const double & x() const
+	{
+		return m_coord.x;
+	}
+	
+	const double & y() const
+	{
+		return m_coord.y;
+	}
+	
+	const double & z() const
+	{
+		return m_coord.z;
+	}
+	
+	
+	
 	Vecteur(const Util3D::Dbl3 & v)
 	{
 		x() = v.x;
