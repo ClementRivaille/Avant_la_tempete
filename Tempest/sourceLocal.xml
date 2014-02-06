@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Configuration mode = "source" port="9800" kinect="0" >
-  <!--Target ip="192.168.41.178" port="9801" -->
-  <Target ip="192.168.0.1" port="9801" />
-</Configuration>
-

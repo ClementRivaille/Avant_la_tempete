@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Configuration mode = "source" port="9802" kinect="1" >
-  <Target ip="10.42.43.10" port="9803" />
-</Configuration>
-

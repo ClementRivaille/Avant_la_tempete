@@ -25,113 +25,123 @@ public:
 	
 	Vecteur(double x, double y, double z)
 	{
-		m_coord.x = x;
-		m_coord.y = y;
-		m_coord.z = z;
+		x() = x;
+		y() = y;
+		z() = z;
 	}
 	
 	~Vecteur(){};
 
-	const double & x() const
+	double & x()
 	{
 		return m_coord.x;
 	}
 	
-	const double & y() const
+	double & y()
 	{
 		return m_coord.y;
 	}
 	
-	const double & z() const
+	double & z()
 	{
 		return m_coord.z;
 	}
 	
 	Vecteur(const Util3D::Dbl3 & v)
 	{
-		m_coord.x = v.x;
-		m_coord.y = v.y;
-		m_coord.z = v.z;
+		x() = v.x;
+		y() = v.y;
+		z() = v.z;
 	}
 	
 	Vecteur(const Util3D::Dbl4 & v)
 	{
-		m_coord.x = v.x;
-		m_coord.y = v.y;
-		m_coord.z = v.z;
+		x() = v.x;
+		y() = v.y;
+		z() = v.z;
 	}
 	
 	Vecteur(const Vecteur & v)
 	{
-		m_coord.x = v.m_coord.x;
-		m_coord.y = v.m_coord.y;
-		m_coord.z = v.m_coord.z;
+		x() = v.x();
+		y() = v.y();
+		z() = v.z();
 	}
 	
 	Vecteur & operator= (const Vecteur & v)
 	{
-		m_coord.x = v.m_coord.x;
-		m_coord.y = v.m_coord.y;
-		m_coord.z = v.m_coord.z;
+		x() = v.x();
+		y() = v.y();
+		z() = v.z();
 		return (*this);
 	}
 
 	Vecteur operator+ (const Vecteur & v) const
 	{
 		Vecteur res;
-		res.m_coord.x = m_coord.x + v.m_coord.x;
-		res.m_coord.y = m_coord.y + v.m_coord.y;
-		res.m_coord.z = m_coord.z + v.m_coord.z;
+		res.x() = x() + v.x();
+		res.y() = y() + v.y();
+		res.z() = z() + v.z();
 		return res;
 	}
 	
 	Vecteur operator- (const Vecteur & v) const
 	{
 		Vecteur res;
-		res.m_coord.x = m_coord.x - v.m_coord.x;
-		res.m_coord.y = m_coord.y - v.m_coord.y;
-		res.m_coord.z = m_coord.z - v.m_coord.z;
+		res.x() = x() - v.x();
+		res.y() = y() - v.y();
+		res.z() = z() - v.z();
 		return res;
 	}
 	
 	Vecteur operator- () const
 	{
 		Vecteur res;
-		res.m_coord.x = -m_coord.x;
-		res.m_coord.y = -m_coord.y;
-		res.m_coord.z = -m_coord.z;
+		res.x() = -x();
+		res.y() = -y();
+		res.z() = -z();
 		return res;
 	}
 	
 	double operator* (const Vecteur & v) const
 	{
-		return m_coord.x*v.m_coord.x + m_coord.y*v.m_coord.y + m_coord.z*v.m_coord.z;
+		return x()*v.x() + y()*v.y() + z()*v.z();
 	}
 	
 	Vecteur operator* (double d) const
 	{
 		Vecteur res;
-		res.m_coord.x = m_coord.x*d;
-		res.m_coord.y = m_coord.y*d;
-		res.m_coord.z = m_coord.z*d;
+		res.x() = x()*d;
+		res.y() = y()*d;
+		res.z() = z()*d;
 		return res;
 	}
 	
 	Vecteur operator/ (double d) const
 	{
 		Vecteur res;
-		res.m_coord.x = m_coord.x/d;
-		res.m_coord.y = m_coord.y/d;
-		res.m_coord.z = m_coord.z/d;
+		res.x() = x()/d;
+		res.y() = y()/d;
+		res.z() = z()/d;
 		return res;
 	}
 	
 	Vecteur & operator+= (const Vecteur & v)
 	{
-		m_coord.x += v.m_coord.x;
-		m_coord.y += v.m_coord.y;
-		m_coord.z += v.m_coord.z;
+		x() += v.x();
+		y() += v.y();
+		z() += v.z();
 		return (*this);
+	}
+	
+	//produit vectoriel
+	Vecteur operator^(const Vecteur & v) const
+	{
+		Vecteur res;
+		res.x() = (*this).y()*v.z() - (*this).z()*v.y();
+		res.y() = (*this).z()*v.x() - (*this).x()*v.z();
+		res.z() = (*this).x()*v.y() - (*this).y()*v.x();
+		return res;
 	}
 	
 	double norm2() const
@@ -213,22 +223,19 @@ Attracteur::Attracteur(ArCW & arCW)
 Attracteur::~Attracteur()
 {}
 
-
+//calcul de la force exercee sur la particule
 Vecteur Attracteur::compute(Util3D::Dbl3 & pos) const
 {
-	//calcul de la force exercee sur la particule
-	{
-		//calcul de la distance entre particule et origine
-		Vecteur p(pos);
-		Vecteur o(m_origin);
-		Vecteur distance = p-o;
-		
-		//calcul de la force exercee
-		//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
-		Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
-		
-		return force;
-	}
+	//calcul de la distance entre particule et origine
+	Vecteur p(pos);
+	Vecteur o(m_origin);
+	Vecteur distance = p-o;
+	
+	//calcul de la force exercee
+	//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
+	Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
+	
+	return force;	
 }
 
 //-----------------------------------------
@@ -240,6 +247,8 @@ public:
 	AR_CLASS(ChampVitesse)
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
+	
+	virtual Vecteur compute(Util3D::Dbl3 & pos) const = 0;
 	
 protected:
 	ChampVitesse(ArCW & arCW);
@@ -259,6 +268,54 @@ void ChampVitesse::setOrigin(const Util3D::Dbl3 & pos)
 {
 	m_origin = pos;
 }
+
+//-----------------------------------------
+//classe concrete de champ de vitesses : 
+// tourbillon
+//
+//la direction de la vitesse de la particule est 
+//orthogonale au vecteur distance a l'origine.
+//la norme de la vitesse est inversement proportionnelle
+//a la distance a l'origine
+//-----------------------------------------
+class TourbillonVit : public ChampVitesse
+{
+public:
+	AR_CLASS(TourbillonVit)
+	AR_CONSTRUCTOR(TourbillonVit)
+	
+	virtual Vecteur compute(Util3D::Dbl3 & pos) const;
+	
+	virtual void setAxis(Util3D::Dbl3 & axis);
+	
+protected:
+	Vecteur m_axis; //axe de rotation du tourbillon
+};
+
+AR_CLASS_DEF(TourbillonVit,ChampVitesse)
+
+TourbillonVit::TourbillonVit(ArCW & arCW)
+	: ChampVitesse(arCW),
+	  m_axis(0.0,0.0,1.0)
+{}
+
+TourbillonVit::~TourbillonVit()
+{}
+
+//calcul de la vitesse instantanee de la particule dans le champ
+Vecteur TourbillonVit::compute(Util3D::Dbl3 & pos) const
+{
+	//calcul de la distance entre particule et origine
+	Vecteur p(pos);
+	Vecteur o(m_origin);
+	Vecteur distance = p-o;
+	
+	//calcul de la direction de la vitesse
+	Vecteur normalizedDistance = distance.normalized();
+	
+	
+}
+
 
 //-----------------------------------------
 //classe de ParticleSystem modifiee
