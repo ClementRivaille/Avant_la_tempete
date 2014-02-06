@@ -303,7 +303,7 @@ public:
 	
 	virtual Vecteur compute(Util3D::Dbl4 & pos) const;
 	
-	virtual void setAxis(Util3D::Dbl3 & axis);
+	virtual void setAxis(const Util3D::Dbl3 & axis);
 	
 protected:
 	Vecteur m_axis; //axe de rotation du tourbillon
@@ -318,6 +318,13 @@ TourbillonVit::TourbillonVit(ArCW & arCW)
 
 TourbillonVit::~TourbillonVit()
 {}
+
+void TourbillonVit::setAxis(const Util3D::Dbl3 & axis)
+{
+	m_axis.x() = axis.x;
+	m_axis.y() = axis.y;
+	m_axis.z() = axis.z;
+}
 
 //calcul de la vitesse instantanee de la particule dans le champ
 Vecteur TourbillonVit::compute(Util3D::Dbl4 & pos) const
