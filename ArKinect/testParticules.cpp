@@ -312,8 +312,15 @@ Vecteur TourbillonVit::compute(Util3D::Dbl3 & pos) const
 	
 	//calcul de la direction de la vitesse
 	Vecteur normalizedDistance = distance.normalized();
+	Vecteur normalizedAxis = m_axis.normalized();
+	Vecteur directionVit = normalizedDistance ^ normalizedAxis;
 	
+	//calcul de la norme, fonction de la distance
+	//vitesse arbitraire à l'origine : 100
+	double normeVit = 100.0/distance.norm2();
 	
+	//renvoyer la vitesse = dirVit * normVit
+	return directionVit*normeVit;
 }
 
 
