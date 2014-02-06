@@ -232,6 +232,35 @@ Vecteur Attracteur::compute(Util3D::Dbl3 & pos) const
 }
 
 //-----------------------------------------
+//classe abstraite de champ de vitesses
+//-----------------------------------------
+class ChampVitesse : public ArObject
+{
+public:
+	AR_CLASS(ChampVitesse)
+	
+	virtual void setOrigin(const Util3D::Dbl3 & pos);
+	
+protected:
+	ChampVitesse(ArCW & arCW);
+	Util3D::Dbl3 m_origin;
+};
+
+AR_CLASS_NOVOID_DEF(ChampVitesse, ArObject)
+
+ChampVitesse::ChampVitesse(ArCW & arCW)
+	: ArObject(arCW)
+{}
+
+ChampVitesse::~ChampVitesse()
+{}
+
+void ChampVitesse::setOrigin(const Util3D::Dbl3 & pos)
+{
+	m_origin = pos;
+}
+
+//-----------------------------------------
 //classe de ParticleSystem modifiee
 //-----------------------------------------
 class ParticlesEtForces : public ParticleSystem
