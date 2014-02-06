@@ -166,8 +166,6 @@ public:
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
-	virtual const Util3D::Dbl3 & getOrigin() const;
-	
 	//virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
 	virtual Vecteur compute(Util3D::Dbl3 & pos) const = 0;
 	
@@ -192,10 +190,6 @@ void Potentiel::setOrigin(const Util3D::Dbl3 & pos)
 	m_origin = pos;
 }
 
-const Util3D::Dbl3 & Potentiel::getOrigin() const
-{
-	return m_origin;
-}
 
 //-----------------------------------------
 //classe concrete de potentiel : attracteur
