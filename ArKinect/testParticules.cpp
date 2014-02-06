@@ -108,7 +108,7 @@ public:
 		return m_coord.x*v.m_coord.x + m_coord.y*v.m_coord.y + m_coord.z*v.m_coord.z;
 	}
 	
-	Vecteur operator* (double & d) const
+	Vecteur operator* (double d) const
 	{
 		Vecteur res;
 		res.m_coord.x = m_coord.x*d;
@@ -168,7 +168,8 @@ public:
 	
 	virtual const Util3D::Dbl3 & getOrigin() const;
 	
-	virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
+	//virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
+	virtual Vecteur compute(Util3D::Dbl3 & pos) const = 0;
 	
 protected:
 
@@ -206,7 +207,7 @@ public:
 	AR_CLASS(Attracteur)
 	AR_CONSTRUCTOR(Attracteur)
 	
-	virtual Vecteur compute(ParticleSystem::Particle & particle) const;
+	virtual Vecteur compute(Util3D::Dbl3 & pos) const;
 };
 
 AR_CLASS_DEF(Attracteur, Potentiel)
@@ -219,12 +220,12 @@ Attracteur::~Attracteur()
 {}
 
 
-Vecteur Attracteur::compute(ParticleSystem::Particle & particle) const
+Vecteur Attracteur::compute(Util3D::Dbl3 & pos) const
 {
 	//calcul de la force exercee sur la particule
 	{
 		//calcul de la distance entre particule et origine
-		Vecteur p(particule.getPosition());
+		Vecteur p(pos);
 		Vecteur o(m_origin);
 		Vecteur distance = p-o;
 		
@@ -290,7 +291,7 @@ bool ParticlesEtForces::_updateParticle(double dt, ParticleSystem::Particle & pa
 		Vecteur resultante(0.0,0.0,0.0);
 		for(int i = 0 ; i < m_potentiels.size() ; i++)
 		{
-			resultante += m_potentiels[i]->compute(part);
+			resultante += m_potentiels[i]->compute(part.getPosition());
 		}
 		
 		//msie a jour de la particule
