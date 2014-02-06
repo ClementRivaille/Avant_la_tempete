@@ -498,8 +498,9 @@ ArRef<Scheduler> simulationInit(void)
 	
 	unsigned int w,h;
 	Renderer3D::getScreenSize(w,h);
-	viewer->setWindowGeometry(w-400,0,400,400);
+	viewer->setWindowGeometry(50,50,1680,980);
 	viewer->setMapped(true);
+	viewer->setBackgroundColor(0.0,0.0,0.0);
 	
 	return scd;
 }
