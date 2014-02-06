@@ -25,9 +25,9 @@ public:
 	
 	Vecteur(double x, double y, double z)
 	{
-		x() = x;
-		y() = y;
-		z() = z;
+		m_coord.x = x;
+		m_coord.y = y;
+		m_coord.z = z;
 	}
 	
 	~Vecteur(){};
@@ -338,6 +338,8 @@ public:
 	
 protected:
 	StlVector<ArRef<Potentiel> > m_potentiels;	//ensemble des potentiels du systeme de particules
+	
+	StlVector<ArRef<ChampVitesse> > m_vitesses; //ensemble des champs de vitesse du systeme de particules
 
 };
 
