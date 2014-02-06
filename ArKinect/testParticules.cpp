@@ -194,7 +194,7 @@ public:
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
 	//virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
-	virtual Vecteur compute(Util3D::Dbl3 & pos) const = 0;
+	virtual Vecteur compute(Util3D::Dbl4 & pos) const = 0;
 	
 protected:
 
@@ -212,7 +212,7 @@ Potentiel::Potentiel(ArCW & arCW)
 Potentiel::~Potentiel()
 {}
 
-void Potentiel::setOrigin(const Util3D::Dbl3 & pos)
+void Potentiel::setOrigin(const Util3D::Dbl4 & pos)
 {
 	m_origin = pos;
 }
@@ -228,7 +228,7 @@ public:
 	AR_CLASS(Attracteur)
 	AR_CONSTRUCTOR(Attracteur)
 	
-	virtual Vecteur compute(Util3D::Dbl3 & pos) const;
+	virtual Vecteur compute(Util3D::Dbl4 & pos) const;
 };
 
 AR_CLASS_DEF(Attracteur, Potentiel)
@@ -241,7 +241,7 @@ Attracteur::~Attracteur()
 {}
 
 //calcul de la force exercee sur la particule
-Vecteur Attracteur::compute(Util3D::Dbl3 & pos) const
+Vecteur Attracteur::compute(Util3D::Dbl4 & pos) const
 {
 	//calcul de la distance entre particule et origine
 	Vecteur p(pos);
@@ -265,7 +265,7 @@ public:
 	
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
-	virtual Vecteur compute(Util3D::Dbl3 & pos) const = 0;
+	virtual Vecteur compute(Util3D::Dbl4 & pos) const = 0;
 	
 protected:
 	ChampVitesse(ArCW & arCW);
@@ -301,7 +301,7 @@ public:
 	AR_CLASS(TourbillonVit)
 	AR_CONSTRUCTOR(TourbillonVit)
 	
-	virtual Vecteur compute(Util3D::Dbl3 & pos) const;
+	virtual Vecteur compute(Util3D::Dbl4 & pos) const;
 	
 	virtual void setAxis(Util3D::Dbl3 & axis);
 	
@@ -320,7 +320,7 @@ TourbillonVit::~TourbillonVit()
 {}
 
 //calcul de la vitesse instantanee de la particule dans le champ
-Vecteur TourbillonVit::compute(Util3D::Dbl3 & pos) const
+Vecteur TourbillonVit::compute(Util3D::Dbl4 & pos) const
 {
 	//calcul de la distance entre particule et origine
 	Vecteur p(pos);
