@@ -313,7 +313,7 @@ AR_CLASS_DEF(TourbillonVit,ChampVitesse)
 
 TourbillonVit::TourbillonVit(ArCW & arCW)
 	: ChampVitesse(arCW),
-	  m_axis(0.0,0.0,1.0)
+	  m_axis(1.0,0.0,0.0)
 {}
 
 TourbillonVit::~TourbillonVit()
@@ -340,8 +340,8 @@ Vecteur TourbillonVit::compute(const Util3D::Dbl4 & pos) const
 	Vecteur directionVit = normalizedDistance ^ normalizedAxis;
 	
 	//calcul de la norme, fonction de la distance
-	//vitesse arbitraire à l'origine : 100
-	double normeVit = 100.0/distance.norm2();
+	//vitesse arbitraire a l'origine
+	double normeVit = 0.01/distance.norm2();
 	
 	//renvoyer la vitesse = dirVit * normVit
 	return directionVit*normeVit;
@@ -374,11 +374,12 @@ ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
 {
 	//potentiel test
 	ArRef<Potentiel> attrac = Attracteur::NEW();
-	attrac->setOrigin(Util3D::Dbl3(0.0,5.0,5.0));
+	attrac->setOrigin(Util3D::Dbl3(0.0,0.0,0.0));
 	m_potentiels.push_back(attrac);
 	
 	//champ de vitesse test
-	ArRef<ChampVitesse> tourb = TourbillonVit::NEW();	//par defaut, m_axis(0.0,0.0,0.1)
+	ArRef<ChampVitesse> tourb = TourbillonVit::NEW();	//par defaut, m_axis(1.0,0.0,0.0)
+	tourb->setOrigin(Util3D::Dbl3(0.0,0.1,0.1));
 	m_vitesses.push_back(tourb);
 }
 
@@ -443,7 +444,7 @@ public:
 	
 protected:
 	ArRef<Scene3D> m_scene;
-	ArRef<ParticleSystem> m_particles;
+	ArRef<ParticlesEtForces> m_particles;
 };
 
 AR_CLASS_DEF(MonViewer,Viewer3D)
@@ -451,7 +452,7 @@ AR_CLASS_DEF(MonViewer,Viewer3D)
 MonViewer::MonViewer(ArCW & arCW)
 	: Viewer3D(arCW),
 	  m_scene(Scene3D::NEW()),
-	  m_particles(ParticleSystem::NEW())
+	  m_particles(ParticlesEtForces::NEW())
 {	
 	//ajout du systeme de particules a la scene
 	m_particles->setGravity(0.0,0.0,0.0);
@@ -461,7 +462,7 @@ MonViewer::MonViewer(ArCW & arCW)
 	m_particles->setPosition(0,0,0);
 
 	//position de la camera/viewer dans la scene
-	setPosition(-10,0,0);
+	setPosition(-2.0,0,0);
 	
 	//scene a afficher
 	selectScene(m_scene);
@@ -509,6 +510,9 @@ int main(int argc, char** argv)
 {
 	ArSystem arevi(argc,argv);
 	MonViewer::REGISTER_CLASS();
+	ParticlesEtForces::REGISTER_CLASS();
+	Attracteur::REGISTER_CLASS();
+	TourbillonVit::REGISTER_CLASS();
 	
 	ArSystem::simulationLoop(&simulationInit);
 	return 0;
