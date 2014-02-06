@@ -194,7 +194,7 @@ public:
 	virtual void setOrigin(const Util3D::Dbl3 & pos);
 	
 	//virtual Vecteur compute(ParticleSystem::Particle & particle) const = 0;
-	virtual Vecteur compute(Util3D::Dbl4 & pos) const = 0;
+	virtual Vecteur compute(const Util3D::Dbl4 & pos) const = 0;
 	
 protected:
 
@@ -212,7 +212,7 @@ Potentiel::Potentiel(ArCW & arCW)
 Potentiel::~Potentiel()
 {}
 
-void Potentiel::setOrigin(const Util3D::Dbl4 & pos)
+void Potentiel::setOrigin(const Util3D::Dbl3 & pos)
 {
 	m_origin = pos;
 }
@@ -228,7 +228,7 @@ public:
 	AR_CLASS(Attracteur)
 	AR_CONSTRUCTOR(Attracteur)
 	
-	virtual Vecteur compute(Util3D::Dbl4 & pos) const;
+	virtual Vecteur compute(const Util3D::Dbl4 & pos) const;
 };
 
 AR_CLASS_DEF(Attracteur, Potentiel)
@@ -241,7 +241,7 @@ Attracteur::~Attracteur()
 {}
 
 //calcul de la force exercee sur la particule
-Vecteur Attracteur::compute(Util3D::Dbl4 & pos) const
+Vecteur Attracteur::compute(const Util3D::Dbl4 & pos) const
 {
 	//calcul de la distance entre particule et origine
 	Vecteur p(pos);
