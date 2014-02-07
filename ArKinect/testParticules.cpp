@@ -416,7 +416,7 @@ ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
 	
 	//champ de vitesse test
 	ArRef<TourbillonVit> tourb = TourbillonVit::NEW();	//par defaut, m_axis(1.0,0.0,0.0)
-	tourb->setAxis(Util3D::Dbl3(0.0,0.0,1.0));
+	tourb->setAxis(Util3D::Dbl3(1.0,0.0,0.0));
 	tourb->setOrigin(Util3D::Dbl3(0.0,0.5,0.5));
 	m_vitesses.push_back(tourb);
 }
@@ -486,7 +486,11 @@ protected:
 	
 	virtual void initParticles();
 	
+	virtual void initChamps();
+	
 	virtual void updateParticles(double dt);
+	
+	
 };
 
 AR_CLASS_DEF(MonViewer,Viewer3D)
@@ -504,6 +508,9 @@ MonViewer::MonViewer(ArCW & arCW)
 	
 	//initialisation du systeme de particules
 	initParticles();
+	
+	//ajout de champs
+	initChamps();
 
 	//position de la camera/viewer dans la scene
 	setPosition(-10.0,0,0);
@@ -524,10 +531,18 @@ void MonViewer::initParticles()
 	m_particles->setSection(25.0,25.0,0.0,0.0,true);
 	m_particles->setEmissionSpeedDispersion(0.5);
 	m_particles->setInitialAngleDispersion(0.1);
-	m_particles->setParticleDuration(50.0);
+	m_particles->setParticleDuration(20.0);
 	m_particles->setSize(0.04,0.04);
 	m_particles->setSizeDispersion(0.01,0.01);
 	m_particles->setGravity(0.0,0.0,0.0);
+}
+
+void MonViewer::initChamps()
+{
+	ArRef<Attracteur> autreAttrac = Attracteur::NEW();
+	autreAttrac->setOrigin(Util3D::Dbl3(0.0,-3.0,0.0));
+	autreAttrac->setForce(6.0);
+	m_particles->m_potentiels.push_back(autreAttrac);
 }
 
 void MonViewer::updateParticles(double dt)
