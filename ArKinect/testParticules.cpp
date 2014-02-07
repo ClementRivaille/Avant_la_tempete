@@ -235,16 +235,44 @@ public:
 	AR_CONSTRUCTOR(Attracteur)
 	
 	virtual Vecteur compute(const Util3D::Dbl4 & pos) const;
+	
+	virtual void setForce(double f);
+	
+	virtual void increment();
+	
+	virtual void decrement();
+	
+protected:
+	double m_facteur;	//parametre de la force d'attraction
 };
 
 AR_CLASS_DEF(Attracteur, Potentiel)
 
 Attracteur::Attracteur(ArCW & arCW)
-	: Potentiel(arCW)
+	: Potentiel(arCW),
+	  m_facteur(1.0)
 {}
 
 Attracteur::~Attracteur()
 {}
+
+void Attracteur::setForce(double f)
+{
+	m_facteur = f;
+}
+
+void Attracteur::increment()
+{
+	m_facteur += 1.0;
+}
+
+void Attracteur::decrement()
+{
+	if (m_facteur >= 1.0)
+	{
+		m_facteur -= 1.0;
+	}
+}
 
 //calcul de la force exercee sur la particule
 Vecteur Attracteur::compute(const Util3D::Dbl4 & pos) const
@@ -255,9 +283,9 @@ Vecteur Attracteur::compute(const Util3D::Dbl4 & pos) const
 	Vecteur distance = o-p;	//dirigee de pos vers origin
 	
 	//calcul de la force exercee
-	//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
-	Vecteur dirForce =  distance.normalized();
-	double normForce = 10.0/distance.norm();
+	//cste gravitationnelle ? masse ?
+	Vecteur dirForce = distance.normalized();
+	double normForce = m_facteur/distance.norm();
 	
 	return dirForce * normForce;	
 }
@@ -363,14 +391,16 @@ class ParticlesEtForces : public ParticleSystem
 public:
 	AR_CLASS(ParticlesEtForces)
 	AR_CONSTRUCTOR(ParticlesEtForces)
+
+	StlVector<ArRef<Potentiel> > m_potentiels;	//ensemble des potentiels du systeme de particules
+	StlVector<ArRef<ChampVitesse> > m_vitesses; //ensemble des champs de vitesse du systeme de particules
 	
+protected:	
 	//redefinition(s) necessaire(s) a l'utilisation de ParticleEuler
 	virtual bool _updateParticle(double dt, ParticleSystem::Particle & particleInOut);
 	
-protected:
-	StlVector<ArRef<Potentiel> > m_potentiels;	//ensemble des potentiels du systeme de particules
+
 	
-	StlVector<ArRef<ChampVitesse> > m_vitesses; //ensemble des champs de vitesse du systeme de particules
 
 };
 
