@@ -22,8 +22,12 @@ using namespace std;
 #include "AReVi/Contrib/arMath.h"
 
 
-#include "AReVi/Lib3D/particleSystem.h"
+//#include "AReVi/Lib3D/particleSystem.h"
 #include "AReVi/Lib3D/urlTexture.h"
+
+
+//ajout du nouveau systeme de particules
+#include "./particlesEtForces.h"
 
 
 using std::cout;
@@ -326,7 +330,8 @@ protected:
   
   
   //ajout d'un systeme de particules, similaire a tempest dans app.cpp
-  ArRef<ParticleSystem> _tempest;
+  //ArRef<ParticleSystem> _tempest;
+  ArRef<ParticlesEtForces> _tempest;
   ArRef<URLTexture> _tempestTexture;
   double _tempestEmissionSpeed;
   bool _tempestVisible;
@@ -352,7 +357,8 @@ Action::Action( ArCW & arCW)
   _thickness(7),
   _startLocation(Base3D::NEW()),
   //ajout en rapport avec les particules
-  _tempest(ParticleSystem::NEW()),
+  //_tempest(ParticleSystem::NEW()),
+  _tempest(ParticlesEtForces::NEW()),
   _tempestVisible(true),
   _tempestFollowing(false),
   _tempestYaw(0.0),
@@ -580,7 +586,7 @@ if (!_points->applyChanges(true))
   
   
 //tempete
-_tempestFollow(dt);
+//_tempestFollow(dt);
 _tempest->update(dt);
   
 return true;
@@ -688,9 +694,9 @@ void Action::_initTempest()
     
     _tempestX = -5.0;
 	_tempestEmissionSpeed = 40.0;
-	_tempestTexture = URLTexture::NEW("data/rond.png",false,false);
+	//_tempestTexture = URLTexture::NEW("data/rond.png",false,false);
 	_renderer->accessScene()->addParticleSystem(_tempest);
-	_tempest->setLocation(_renderer);
+	//_tempest->setLocation(_renderer);
 	_tempest->translate(_tempestX,0.0,0.0);
 	_tempest->setSection(25.0,25.0,0.0,0.0,true); //rounded
 	_tempest->setEmissionSpeed(_tempestEmissionSpeed);
@@ -701,9 +707,17 @@ void Action::_initTempest()
 	_tempest->setSize(0.04,0.04);
 	_tempest->setSizeDispersion(0.01,0.01);
 	_tempest->setColor(1.0,1.0,1.0,1.0);
-	_tempest->setTexture(_tempestTexture);
+	//_tempest->setTexture(_tempestTexture);
 	_tempest->setParticleRate(400.0);
 	_tempest->setGravity(0.0,0.0,0.0);
+	
+	//construction des potentiels et champs
+	ArRef<Attracteur> attrac = Attracteur::NEW();
+	attrac->setOrigin(Util3D::Dbl3(-1.0,3.0,2.0));
+	attrac->setForce(3.0);
+	
+	_tempest->m_potentiels.push_back(attrac);
+	
 }
 
 void Action::_tempestFollow(double dt)
@@ -760,6 +774,8 @@ ArSystem arevi(argc,argv);
 //ArSystem::loadPlugin("MagickImageLoader");
 
 Action::REGISTER_CLASS();
+ParticlesEtForces::REGISTER_CLASS();
+Attracteur::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 return(0);
 }
