@@ -9,6 +9,7 @@
 #include "AReVi/Lib3D/particleSystem.h"
 
 #include <cmath>
+#include <algorithm>
 
 using namespace AReVi;
 
@@ -102,6 +103,7 @@ public:
 		return res;
 	}
 	
+	//operateur soustraction
 	Vecteur operator- (const Vecteur & v) const
 	{
 		Vecteur res;
@@ -111,6 +113,7 @@ public:
 		return res;
 	}
 	
+	//operateur unaire negatif
 	Vecteur operator- () const
 	{
 		Vecteur res;
@@ -120,11 +123,13 @@ public:
 		return res;
 	}
 	
+	//produit scalaire
 	double operator* (const Vecteur & v) const
 	{
 		return x()*v.x() + y()*v.y() + z()*v.z();
 	}
 	
+	//multiplication par un scalaire
 	Vecteur operator* (double d) const
 	{
 		Vecteur res;
@@ -134,6 +139,7 @@ public:
 		return res;
 	}
 	
+	//division par un scalaire
 	Vecteur operator/ (double d) const
 	{
 		Vecteur res;
@@ -246,13 +252,14 @@ Vecteur Attracteur::compute(const Util3D::Dbl4 & pos) const
 	//calcul de la distance entre particule et origine
 	Vecteur p(pos);
 	Vecteur o(m_origin);
-	Vecteur distance = p-o;
+	Vecteur distance = o-p;	//dirigee de pos vers origin
 	
 	//calcul de la force exercee
 	//cste gravitationnelle ? masse ?   pour l'exemple, tout a 1
-	Vecteur force =  -distance.normalized() * 1.0/distance.norm2() ;
+	Vecteur dirForce =  distance.normalized();
+	double normForce = 10.0/distance.norm();
 	
-	return force;	
+	return dirForce * normForce;	
 }
 
 //-----------------------------------------
@@ -341,7 +348,7 @@ Vecteur TourbillonVit::compute(const Util3D::Dbl4 & pos) const
 	
 	//calcul de la norme, fonction de la distance
 	//vitesse arbitraire a l'origine
-	double normeVit = 0.01/distance.norm2();
+	double normeVit = 1.0/distance.norm2();
 	
 	//renvoyer la vitesse = dirVit * normVit
 	return directionVit*normeVit;
@@ -373,13 +380,14 @@ ParticlesEtForces::ParticlesEtForces(ArCW & arCW)
 	: ParticleSystem(arCW)
 {
 	//potentiel test
-	ArRef<Potentiel> attrac = Attracteur::NEW();
-	attrac->setOrigin(Util3D::Dbl3(0.0,0.0,0.0));
+	ArRef<Attracteur> attrac = Attracteur::NEW();
+	attrac->setOrigin(Util3D::Dbl3(0.0,1.0,1.0));
 	m_potentiels.push_back(attrac);
 	
 	//champ de vitesse test
-	ArRef<ChampVitesse> tourb = TourbillonVit::NEW();	//par defaut, m_axis(1.0,0.0,0.0)
-	tourb->setOrigin(Util3D::Dbl3(0.0,0.1,0.1));
+	ArRef<TourbillonVit> tourb = TourbillonVit::NEW();	//par defaut, m_axis(1.0,0.0,0.0)
+	tourb->setAxis(Util3D::Dbl3(0.0,0.0,1.0));
+	tourb->setOrigin(Util3D::Dbl3(0.0,0.5,0.5));
 	m_vitesses.push_back(tourb);
 }
 
@@ -445,6 +453,10 @@ public:
 protected:
 	ArRef<Scene3D> m_scene;
 	ArRef<ParticlesEtForces> m_particles;
+	
+	virtual void initParticles();
+	
+	virtual void updateParticles(double dt);
 };
 
 AR_CLASS_DEF(MonViewer,Viewer3D)
@@ -455,14 +467,16 @@ MonViewer::MonViewer(ArCW & arCW)
 	  m_particles(ParticlesEtForces::NEW())
 {	
 	//ajout du systeme de particules a la scene
-	m_particles->setGravity(0.0,0.0,0.0);
 	m_scene->addParticleSystem(m_particles);
-
+	
 	//position du systeme de particules dans la scene
 	m_particles->setPosition(0,0,0);
+	
+	//initialisation du systeme de particules
+	initParticles();
 
 	//position de la camera/viewer dans la scene
-	setPosition(-2.0,0,0);
+	setPosition(-10.0,0,0);
 	
 	//scene a afficher
 	selectScene(m_scene);
@@ -475,9 +489,31 @@ MonViewer::MonViewer(ArCW & arCW)
 MonViewer::~MonViewer()
 {}
 
+void MonViewer::initParticles()
+{
+	m_particles->setSection(25.0,25.0,0.0,0.0,true);
+	m_particles->setEmissionSpeedDispersion(0.5);
+	m_particles->setInitialAngleDispersion(0.1);
+	m_particles->setParticleDuration(50.0);
+	m_particles->setSize(0.04,0.04);
+	m_particles->setSizeDispersion(0.01,0.01);
+	m_particles->setGravity(0.0,0.0,0.0);
+}
+
+void MonViewer::updateParticles(double dt)
+{
+	//const double angle = 3.14/4.0;
+	//double yaw = ArSystem::realRand()*angle -  0.5*angle;
+	//double pitch = ArSystem::realRand()*angle -  0.5*angle;
+	
+	//m_particles->pitch(pitch);
+	//m_particles->yaw(yaw);
+	
+	m_particles->update(dt);
+}
 bool MonViewer::activate(ArRef<Activity>, double dt)
 {
-	m_particles->update(dt);
+	updateParticles(dt);
 	return true;
 }
 
