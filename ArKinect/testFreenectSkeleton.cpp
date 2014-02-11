@@ -468,7 +468,7 @@ bool
 Action::_action(ArRef<Activity>, double dt)
 {
 	
-	/*
+	
 	
 const double a_d = -0.0030711;
 const double b_d = 3.3309495;
@@ -541,11 +541,11 @@ for (int i(0);i<480;++i)
     vertices[i*640+j]=Util3D::Dbl3(depth,x,-y);
     
     
-    */
     
     
     
-    /*
+    
+    
     int u,v;
     _computeColorCoordinatesForPoint(Vector3d(x,y,depth),u,v);
 
@@ -554,10 +554,10 @@ for (int i(0);i<480;++i)
     const double g = rgb[colorOffset+1]/256.0;
     const double b = rgb[colorOffset+2]/256.0;
     colors[i*640+j]=Util3D::Dbl3(r,g,b);
-    */
     
     
-    /*
+    
+    
     
     
     if (keep)
@@ -582,7 +582,7 @@ if (!_points->applyChanges(true))
   { cerr<<"Invalid point set"<<endl; }
   
   
-  */
+  
   
   
 //tempete
@@ -693,10 +693,10 @@ void Action::_initTempest()
     _tempest->setGravity(0.0,0.0,0.0);*/
     
     _tempestX = -5.0;
-	_tempestEmissionSpeed = 40.0;
+	_tempestEmissionSpeed = 4.0;
 	//_tempestTexture = URLTexture::NEW("data/rond.png",false,false);
 	_renderer->accessScene()->addParticleSystem(_tempest);
-	//_tempest->setLocation(_renderer);
+	_tempest->setLocation(_renderer);
 	_tempest->translate(_tempestX,0.0,0.0);
 	_tempest->setSection(25.0,25.0,0.0,0.0,true); //rounded
 	_tempest->setEmissionSpeed(_tempestEmissionSpeed);
@@ -713,10 +713,18 @@ void Action::_initTempest()
 	
 	//construction des potentiels et champs
 	ArRef<Attracteur> attrac = Attracteur::NEW();
-	attrac->setOrigin(Util3D::Dbl3(-1.0,3.0,2.0));
-	attrac->setForce(3.0);
+	attrac->setOrigin(Util3D::Dbl3(-6.0,3.0,2.0));
+	attrac->setForce(0.1);
 	
 	_tempest->m_potentiels.push_back(attrac);
+	
+	
+	//construction d'un champ de vitesse tourbillon
+	ArRef<TourbillonVit> tourb = TourbillonVit::NEW();
+	tourb->setOrigin(Util3D::Dbl3(0.0,0.0,0.0));
+	tourb->setAxis(Util3D::Dbl3(1.0,0.0,0.0));
+	
+	_tempest->m_vitesses.push_back(tourb);
 	
 }
 
@@ -769,13 +777,14 @@ main(int argc,
      char ** argv)
 {
 ArSystem arevi(argc,argv);
-//ArSystem::loadPlugin("OSXImageLoader");
-//ArSystem::loadPlugin("Imlib2ImageLoader");
-//ArSystem::loadPlugin("MagickImageLoader");
+ArSystem::loadPlugin("OSXImageLoader");
+ArSystem::loadPlugin("Imlib2ImageLoader");
+ArSystem::loadPlugin("MagickImageLoader");
 
 Action::REGISTER_CLASS();
 ParticlesEtForces::REGISTER_CLASS();
 Attracteur::REGISTER_CLASS();
+TourbillonVit::REGISTER_CLASS();
 ArSystem::simulationLoop(&simulationInit);
 return(0);
 }
