@@ -30,6 +30,7 @@ if openKinect:
   arProgram( env = env, srcList = ["testFreenect.cpp"] )
   arProgram( env = env, srcList = ["testFreenectMin.cpp"] )
   arProgram( env = env, srcList = ["testFreenectSkeleton.cpp", "ReceiveOSCorder.cpp"] )
+  arProgram( env = env, srcList = ["testParticules.cpp", "ReceiveOSCorder.cpp"] )
 
   if wiimote:
     env.PrependUnique(LIBPATH="#lib")
